@@ -1,10 +1,64 @@
 @import "tailwindcss";
 
 @layer base {
+  /* Dark mode (default) */
   body {
     @apply bg-slate-900 text-white antialiased;
   }
+
+  /* Light mode overrides */
+  html.light body {
+    @apply bg-slate-100 text-slate-900;
+  }
+
+  /* Light mode sidebar */
+  html.light aside {
+    background-color: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Light mode cards */
+  html.light .bg-slate-800\/50 {
+    background-color: #ffffff !important;
+  }
+
+  html.light .bg-slate-800 {
+    background-color: #f1f5f9 !important;
+  }
+
+  html.light .border-slate-700\/50 {
+    border-color: #e2e8f0 !important;
+  }
+
+  html.light .text-slate-400 {
+    color: #64748b !important;
+  }
+
+  html.light .text-white {
+    color: #0f172a !important;
+  }
+
+  html.light .bg-slate-900 {
+    background-color: #f1f5f9 !important;
+  }
+
+  html.light .bg-slate-900\/50 {
+    background-color: #f8fafc !important;
+  }
+
+  html.light .text-slate-500 {
+    color: #94a3b8 !important;
+  }
+
+  html.light .bg-slate-700\/50 {
+    background-color: #e2e8f0 !important;
+  }
+
+  html.light .hover\:bg-slate-800\/50:hover {
+    background-color: #e2e8f0 !important;
+  }
 }
+
 
 /* Custom scrollbar */
 * {

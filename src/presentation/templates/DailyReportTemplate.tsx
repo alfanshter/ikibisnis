@@ -5,6 +5,7 @@
 'use client';
 import React from 'react';
 import { Sidebar } from '@/src/presentation/components/organisms/Sidebar';
+import { TopBar } from '@/src/presentation/components/organisms/TopBar';
 import { FinanceSummaryCard } from '@/src/presentation/components/molecules/FinanceSummaryCard';
 import { DailyReportTable } from '@/src/presentation/components/organisms/DailyReportTable';
 import { TransactionModal } from '@/src/presentation/components/organisms/TransactionModal';
@@ -35,14 +36,8 @@ export const DailyReportTemplate: React.FC<Props> = ({
   <div className="flex min-h-screen bg-slate-950">
     <Sidebar />
 
-    <main className="flex-1 ml-64 p-8 overflow-y-auto">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-slate-500 text-sm mb-1">Finance / Laporan Harian</p>
-          <h1 className="text-white text-2xl font-bold tracking-tight">Laporan Harian</h1>
-        </div>
-      </div>
+    <main className="flex-1 lg:ml-64 p-8 pt-16 lg:pt-8 overflow-y-auto">
+      <TopBar title="Laporan Harian" subtitle="Ringkasan transaksi pemasukan & pengeluaran harian." />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">

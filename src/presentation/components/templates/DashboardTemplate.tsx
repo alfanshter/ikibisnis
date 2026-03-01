@@ -8,7 +8,7 @@
 import React from 'react';
 import { Dashboard } from '@/src/domain/entities/Dashboard';
 import { Sidebar } from '../organisms/Sidebar';
-import { DashboardHeader } from '../organisms/DashboardHeader';
+import { TopBar } from '../organisms/TopBar';
 import { MetricsGrid } from '../organisms/MetricsGrid';
 import { ProjectStatusSection } from '../organisms/ProjectStatusSection';
 import { RecentActivitySection } from '../organisms/RecentActivitySection';
@@ -22,8 +22,8 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({ dashboard 
     <div className="flex min-h-screen bg-slate-900">
       <Sidebar />
       
-      <main className="flex-1 ml-64 p-8">
-        <DashboardHeader />
+      <main className="flex-1 lg:ml-64 p-8 pt-16 lg:pt-8">
+        <TopBar title="Dashboard Overview" subtitle="Selamat datang kembali! Berikut ringkasan aktivitas bisnis Anda." />
         
         <MetricsGrid metrics={dashboard.metrics} />
         

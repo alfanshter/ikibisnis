@@ -5,6 +5,7 @@
 'use client';
 import React from 'react';
 import { Sidebar } from '@/src/presentation/components/organisms/Sidebar';
+import { TopBar } from '@/src/presentation/components/organisms/TopBar';
 import { StoreSettingsForm } from '@/src/presentation/components/organisms/StoreSettingsForm';
 import { ProfileSettingsForm } from '@/src/presentation/components/organisms/ProfileSettingsForm';
 import { SecuritySettingsForm } from '@/src/presentation/components/organisms/SecuritySettingsForm';
@@ -13,7 +14,7 @@ import { Icon } from '@/src/presentation/components/atoms/Icon';
 import {
   AppSettings, UserProfile, AppearanceSettings, ChangePasswordDTO,
 } from '@/src/domain/entities/Settings';
-import { SettingsTab } from '@/src/presentation/hooks/useSettings';
+import { SettingsTab } from '@/src/presentation/hooks/settings/useSettings';
 
 const TABS: { key: SettingsTab; label: string; icon: string }[] = [
   { key: 'toko',     label: 'Toko',     icon: 'store'   },
@@ -48,12 +49,8 @@ export const SettingsTemplate: React.FC<Props> = ({
   <div className="flex min-h-screen bg-slate-950">
     <Sidebar />
 
-    <main className="flex-1 ml-64 p-8 overflow-y-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <p className="text-slate-500 text-sm mb-1">Pengaturan</p>
-        <h1 className="text-white text-2xl font-bold tracking-tight">Pengaturan Sistem</h1>
-      </div>
+    <main className="flex-1 lg:ml-64 p-8 pt-16 lg:pt-8 overflow-y-auto">
+      <TopBar title="Pengaturan Sistem" subtitle="Kelola profil, toko, keamanan, dan tampilan aplikasi." />
 
       {/* Toast */}
       {toast && (

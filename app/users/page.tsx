@@ -5,19 +5,13 @@ import { UserManagementTemplate } from '@/src/presentation/components/templates/
 
 export default function UsersPage() {
   const {
-    /* Data */
     userCollection,
-    selectedPermissions,
-    /* Flags */
     tableLoading,
-    panelSaving,
     modalSaving,
     deleting,
-    /* Modal state */
     showAddModal,
     editingUser,
     deletingUser,
-    /* Handlers → mapped to on* prop names expected by the template */
     handlePageChange,
     handleAddUser,
     handleEditUser,
@@ -26,27 +20,17 @@ export default function UsersPage() {
     handleModalSubmit,
     handleDeleteConfirm,
     handleDeleteModalClose,
-    handleOpenRolePanel,
-    handleRolePermissionsChange,
-    handleRolePermissionsSave,
-    handleRolePanelClose
   } = useUserManagement();
 
   return (
     <UserManagementTemplate
-      /* Data */
       userCollection={userCollection}
-      selectedPermissions={selectedPermissions}
-      /* Flags */
       tableLoading={tableLoading}
-      panelSaving={panelSaving}
       modalSaving={modalSaving}
       deleting={deleting}
-      /* Modal state */
       showAddModal={showAddModal}
       editingUser={editingUser}
       deletingUser={deletingUser}
-      /* Callbacks */
       onPageChange={handlePageChange}
       onAddUser={handleAddUser}
       onEditUser={handleEditUser}
@@ -55,10 +39,7 @@ export default function UsersPage() {
       onModalSubmit={handleModalSubmit}
       onDeleteConfirm={handleDeleteConfirm}
       onDeleteModalClose={handleDeleteModalClose}
-      onOpenRolePanel={handleOpenRolePanel}
-      onRolePermissionsChange={handleRolePermissionsChange}
-      onRolePermissionsSave={handleRolePermissionsSave}
-      onRolePanelClose={handleRolePanelClose}
     />
   );
 }
+

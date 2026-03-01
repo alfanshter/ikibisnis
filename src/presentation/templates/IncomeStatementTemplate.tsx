@@ -5,6 +5,7 @@
 'use client';
 import React from 'react';
 import { Sidebar } from '@/src/presentation/components/organisms/Sidebar';
+import { TopBar } from '@/src/presentation/components/organisms/TopBar';
 import { FinanceSummaryCard } from '@/src/presentation/components/molecules/FinanceSummaryCard';
 import { IncomeStatementTable } from '@/src/presentation/components/organisms/IncomeStatementTable';
 import { IncomeStatement, formatCurrencyIdr } from '@/src/domain/entities/Finance';
@@ -28,14 +29,8 @@ export const IncomeStatementTemplate: React.FC<Props> = ({ data, loading, period
     <div className="flex min-h-screen bg-slate-950">
       <Sidebar />
 
-      <main className="flex-1 ml-64 p-8 overflow-y-auto">
-        {/* Page Header */}
-        <div className="mb-8">
-          <p className="text-slate-500 text-sm mb-1">Finance / Laba Rugi</p>
-          <h1 className="text-white text-2xl font-bold tracking-tight">Laporan Laba Rugi</h1>
-        </div>
-
-        {/* Summary Cards */}
+        <main className="flex-1 lg:ml-64 p-8 pt-16 lg:pt-8 overflow-y-auto">
+          <TopBar title="Laporan Laba Rugi" subtitle="Ringkasan pendapatan, beban, dan laba bersih." />        {/* Summary Cards */}
         {!loading && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <FinanceSummaryCard

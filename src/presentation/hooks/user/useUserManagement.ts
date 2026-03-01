@@ -9,10 +9,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   User,
   UserCollection,
-  RolePermissions,
   CreateUserDTO,
   UpdateUserDTO,
-  UserRole
 } from '@/src/domain/entities/User';
 import DIContainer from '@/src/infrastructure/di/container';
 
@@ -23,12 +21,10 @@ const DEFAULT_EMPTY_COLLECTION = new UserCollection(
 
 export const useUserManagement = () => {
   /* ── Data ── */
-  const [userCollection,      setUserCollection]      = useState<UserCollection>(DEFAULT_EMPTY_COLLECTION);
-  const [selectedPermissions, setSelectedPermissions] = useState<RolePermissions | null>(null);
+  const [userCollection, setUserCollection] = useState<UserCollection>(DEFAULT_EMPTY_COLLECTION);
 
   /* ── Loading / saving flags ── */
   const [tableLoading, setTableLoading] = useState(true);
-  const [panelSaving,  setPanelSaving]  = useState(false);
   const [modalSaving,  setModalSaving]  = useState(false);
   const [deleting,     setDeleting]     = useState(false);
 
@@ -104,40 +100,14 @@ export const useUserManagement = () => {
     }
   };
 
-  /* ── Role management panel ── */
-  const handleOpenRolePanel = async (user: User) => {
-    try {
-      const perms = await container.getGetRolePermissionsUseCase().execute(user.role as UserRole);
-      setSelectedPermissions(perms);
-    } catch (err) {
-      console.error('Failed to load role permissions:', err);
-    }
-  };
-
-  const handleRolePermissionsChange = (updated: RolePermissions) => setSelectedPermissions(updated);
-  const handleRolePanelClose        = () => setSelectedPermissions(null);
-
-  const handleRolePermissionsSave = async () => {
-    if (!selectedPermissions) return;
-    try {
-      setPanelSaving(true);
-      await container.getUpdateRolePermissionsUseCase().execute(selectedPermissions);
-    } catch (err) {
-      console.error('Failed to save permissions:', err);
-    } finally {
-      setPanelSaving(false);
-    }
-  };
-
   return {
-    userCollection, selectedPermissions,
-    tableLoading, panelSaving, modalSaving, deleting,
+    userCollection,
+    tableLoading, modalSaving, deleting,
     showAddModal, editingUser, deletingUser,
     handlePageChange,
     handleAddUser, handleEditUser, handleDeleteUser,
     handleModalClose, handleModalSubmit,
     handleDeleteConfirm, handleDeleteModalClose,
-    handleOpenRolePanel,
-    handleRolePermissionsChange, handleRolePermissionsSave, handleRolePanelClose,
   };
 };
+
