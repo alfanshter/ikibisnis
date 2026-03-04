@@ -36,6 +36,9 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({ user, onEdit, onDele
         <div>
           <p className="text-white font-semibold text-sm">{user.name}</p>
           <p className="text-slate-400 text-xs">{user.email}</p>
+          {user.phone && (
+            <p className="text-slate-500 text-xs">{user.phone}</p>
+          )}
         </div>
       </div>
     </td>

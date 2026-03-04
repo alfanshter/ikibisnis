@@ -30,22 +30,22 @@ export const ProjectTableRow: React.FC<Props> = ({ project, onEdit, onDelete, on
   return (
     <tr className="group border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors">
       {/* ID + Title */}
-      <td className="px-6 py-4">
+      <td className="px-4 py-4">
         <div>
           <p className="text-xs text-slate-500 font-mono mb-0.5">{project.id}</p>
-          <p className="text-white font-medium text-sm leading-snug line-clamp-1">{project.title}</p>
-          <p className="text-slate-500 text-xs line-clamp-1">{project.description}</p>
+          <p className="text-white font-medium text-sm leading-snug truncate">{project.title}</p>
+          <p className="text-slate-500 text-xs truncate">{project.description}</p>
         </div>
       </td>
 
       {/* Category */}
-      <td className="px-6 py-4">
+      <td className="px-4 py-4">
         <CategoryBadge category={project.category} />
       </td>
 
       {/* Client */}
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-2">
+      <td className="px-4 py-4">
+        <div className="flex items-center gap-2 min-w-0">
           <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
             <Icon name="building" className="w-3.5 h-3.5 text-slate-400" />
           </div>
@@ -59,7 +59,7 @@ export const ProjectTableRow: React.FC<Props> = ({ project, onEdit, onDelete, on
       </td>
 
       {/* Status + Priority */}
-      <td className="px-6 py-4">
+      <td className="px-4 py-4">
         <div className="flex flex-col gap-1.5">
           <ProjectStatusBadge status={project.status} />
           <PriorityBadge priority={project.priority} />
@@ -67,23 +67,23 @@ export const ProjectTableRow: React.FC<Props> = ({ project, onEdit, onDelete, on
       </td>
 
       {/* Deadline */}
-      <td className="px-6 py-4">
+      <td className="px-4 py-4">
         <div className="flex items-center gap-1.5">
           <Icon name="calendar" className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-          <span className={`text-sm ${dl.cls}`}>{dl.text}</span>
+          <span className={`text-sm whitespace-nowrap ${dl.cls}`}>{dl.text}</span>
         </div>
       </td>
 
       {/* Value */}
-      <td className="px-6 py-4">
-        <span className="text-emerald-400 font-semibold text-sm whitespace-nowrap">
+      <td className="px-4 py-4 text-right">
+        <span className="text-emerald-400 font-semibold text-sm whitespace-nowrap tabular-nums">
           {formatCurrency(project.totalValue)}
         </span>
       </td>
 
       {/* Actions */}
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <td className="px-4 py-4 text-center">
+        <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => onView(project)}
             className="p-1.5 text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded transition-colors"

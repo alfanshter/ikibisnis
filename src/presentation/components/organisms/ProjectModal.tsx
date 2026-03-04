@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import {
   Project,
   ProjectCategory,
+  ProjectOrigin,
   ProjectPriority,
   ProjectItem,
   CreateProjectDTO,
@@ -53,6 +54,8 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
     project?.items && project.items.length > 0 ? project.items : [{ ...EMPTY_ITEM }]
   );
   const [notes,  setNotes]  = useState(project?.notes ?? '');
+  const [origin,   setOrigin]   = useState<ProjectOrigin>(project?.origin ?? 'direct');
+  const [poNumber, setPoNumber] = useState(project?.poNumber ?? '');
   const [errors, setErrors] = useState<FormErrors>({});
 
   const totalValue = calcProjectTotal(items);
@@ -85,12 +88,15 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
           title, description, category, priority,
           client: { name: clientName, contact: clientContact, institution: institution || undefined },
           items, assignedTo, deadline: new Date(deadline), notes: notes || undefined,
+          origin,
+          poNumber: poNumber.trim() || undefined,
         } as CreateProjectDTO)
       : ({
           id: project!.id,
           title, description, category, priority,
           client: { name: clientName, contact: clientContact, institution: institution || undefined },
           items, assignedTo, deadline: new Date(deadline), notes: notes || undefined,
+          poNumber: poNumber.trim() || undefined,
         } as UpdateProjectDTO);
     await onSubmit(dto);
   };
@@ -234,6 +240,31 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
                   <span className="text-slate-400 text-sm">Total Nilai:</span>
                   <span className="text-emerald-400 font-bold">{formatCurrency(totalValue)}</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Origin + PO Number */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {mode === 'add' && (
+                <div>
+                  <label className="block text-slate-300 text-sm mb-1.5">Asal Proyek</label>
+                  <select className={inputCls()} value={origin} onChange={e => setOrigin(e.target.value as ProjectOrigin)}>
+                    <option value="direct">Langsung (Direct)</option>
+                    <option value="quotation">Dari Penawaran (Quotation)</option>
+                  </select>
+                  <p className="text-slate-500 text-xs mt-1">Untuk proyek dari penawaran, gunakan fitur Konversi di halaman Penawaran.</p>
+                </div>
+              )}
+              <div>
+                <label className="block text-slate-300 text-sm mb-1.5">
+                  Nomor PO <span className="text-slate-500 font-normal">(opsional)</span>
+                </label>
+                <input
+                  className={inputCls()}
+                  value={poNumber}
+                  onChange={e => setPoNumber(e.target.value)}
+                  placeholder="PO/KLIEN/2026/001"
+                />
               </div>
             </div>
 

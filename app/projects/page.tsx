@@ -5,26 +5,23 @@ import { ProjectManagementTemplate } from '@/src/presentation/components/templat
 
 export default function ProjectsPage() {
   const {
-    collection, stats, viewingProject,
-    tableLoading, modalSaving, deleting, panelSaving,
+    collection, stats,
+    tableLoading, modalSaving, deleting,
     showAddModal, editingProject, deletingProject,
     statusFilter, categoryFilter, search,
     handlePageChange, handleStatusFilter, handleCategoryFilter, handleSearch,
     handleAddProject, handleEditProject, handleDeleteProject, handleViewProject,
     handleModalClose, handleModalSubmit,
     handleDeleteConfirm, handleDeleteClose,
-    handleDetailClose, handleDetailEdit, handleStatusChange,
   } = useProjectManagement();
 
   return (
     <ProjectManagementTemplate
       collection={collection}
       stats={stats}
-      viewingProject={viewingProject}
       tableLoading={tableLoading}
       modalSaving={modalSaving}
       deleting={deleting}
-      panelSaving={panelSaving}
       showAddModal={showAddModal}
       editingProject={editingProject}
       deletingProject={deletingProject}
@@ -43,9 +40,6 @@ export default function ProjectsPage() {
       onModalSubmit={handleModalSubmit}
       onDeleteConfirm={handleDeleteConfirm}
       onDeleteClose={handleDeleteClose}
-      onDetailClose={handleDetailClose}
-      onDetailEdit={handleDetailEdit}
-      onStatusChange={handleStatusChange}
     />
   );
 }

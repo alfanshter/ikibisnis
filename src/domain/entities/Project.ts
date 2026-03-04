@@ -6,6 +6,13 @@
 
 // ─── Enums / Literal Types ──────────────────────────────────────────────────
 
+/**
+ * Asal muasal pembuatan project:
+ *   'direct'    → Dibuat langsung tanpa melalui proses penawaran
+ *   'quotation' → Hasil konversi dari Penawaran (Quotation) yang di-ACC
+ */
+export type ProjectOrigin = 'direct' | 'quotation';
+
 export type ProjectCategory =
   | 'Pengadaan Barang'
   | 'Pengadaan Jasa'
@@ -52,6 +59,21 @@ export interface Project {
   deadline: Date;
   completedAt?: Date;
   notes?: string;
+
+  /** Asal pembuatan project: langsung atau dari penawaran yang di-ACC. */
+  origin: ProjectOrigin;
+
+  /**
+   * ID Penawaran (Quotation) sumber, jika origin = 'quotation'.
+   * Null jika origin = 'direct'.
+   */
+  quotationId?: string;
+
+  /**
+   * Nomor PO dari klien — opsional.
+   * Bisa diisi saat konversi dari quotation, atau ditambahkan belakangan.
+   */
+  poNumber?: string;
 }
 
 // ─── DTOs ────────────────────────────────────────────────────────────────────
@@ -66,6 +88,12 @@ export interface CreateProjectDTO {
   assignedTo: string;
   deadline: Date;
   notes?: string;
+  /** Default: 'direct'. Set 'quotation' jika dibuat dari konversi penawaran. */
+  origin?: ProjectOrigin;
+  /** Wajib jika origin = 'quotation'. */
+  quotationId?: string;
+  /** Opsional — bisa dikosongkan jika tidak ada PO. */
+  poNumber?: string;
 }
 
 export interface UpdateProjectDTO {
@@ -80,6 +108,8 @@ export interface UpdateProjectDTO {
   assignedTo?: string;
   deadline?: Date;
   notes?: string;
+  /** Update nomor PO kapan saja setelah project dibuat. */
+  poNumber?: string;
 }
 
 // ─── Pagination ──────────────────────────────────────────────────────────────

@@ -9,7 +9,6 @@ import {
   Project,
   ProjectCollection,
   ProjectStats,
-  ProjectStatus,
   CreateProjectDTO,
   UpdateProjectDTO,
 } from '@/src/domain/entities/Project';
@@ -18,26 +17,22 @@ import { TopBar } from '../organisms/TopBar';
 import { ProjectTable } from '../organisms/ProjectTable';
 import { ProjectModal } from '../organisms/ProjectModal';
 import { DeleteProjectModal } from '../organisms/DeleteProjectModal';
-import { ProjectDetailPanel } from '../organisms/ProjectDetailPanel';
 import { ProjectStatsCard } from '../molecules/ProjectStatsCard';
 import { Icon } from '../atoms/Icon';
-import { formatCurrency } from '@/src/domain/entities/Project';
 
 export interface ProjectManagementTemplateProps {
   /* Data */
   collection:    ProjectCollection;
   stats:         ProjectStats | null;
-  viewingProject: Project | null;
 
   /* Flags */
   tableLoading:  boolean;
   modalSaving:   boolean;
   deleting:      boolean;
-  panelSaving:   boolean;
 
   /* Modal state */
-  showAddModal:  boolean;
-  editingProject: Project | null;
+  showAddModal:    boolean;
+  editingProject:  Project | null;
   deletingProject: Project | null;
 
   /* Filters */
@@ -58,21 +53,17 @@ export interface ProjectManagementTemplateProps {
   onModalSubmit:     (dto: CreateProjectDTO | UpdateProjectDTO) => Promise<void>;
   onDeleteConfirm:   ()              => Promise<void>;
   onDeleteClose:     ()              => void;
-  onDetailClose:     ()              => void;
-  onDetailEdit:      ()              => void;
-  onStatusChange:    (status: ProjectStatus) => void;
 }
 
 export const ProjectManagementTemplate: React.FC<ProjectManagementTemplateProps> = ({
-  collection, stats, viewingProject,
-  tableLoading, modalSaving, deleting, panelSaving,
+  collection, stats,
+  tableLoading, modalSaving, deleting,
   showAddModal, editingProject, deletingProject,
   statusFilter, categoryFilter, search,
   onPageChange, onStatusFilter, onCategoryFilter, onSearch,
   onAddProject, onEditProject, onDeleteProject, onViewProject,
   onModalClose, onModalSubmit,
   onDeleteConfirm, onDeleteClose,
-  onDetailClose, onDetailEdit, onStatusChange,
 }) => (
   <div className="flex min-h-screen bg-slate-900">
     <Sidebar activePage="Projects" />
@@ -96,26 +87,19 @@ export const ProjectManagementTemplate: React.FC<ProjectManagementTemplateProps>
 
         {/* ── Stats Bar ── */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
             <ProjectStatsCard label="Total Proyek" value={stats.total}       icon="briefcase"    color="blue"    />
             <ProjectStatsCard label="Baru"          value={stats.baru}        icon="alert-circle" color="sky"     />
             <ProjectStatsCard label="Sedang Proses" value={stats.proses}      icon="clock"        color="amber"   />
             <ProjectStatsCard label="Selesai"        value={stats.selesai}     icon="check-circle" color="emerald" />
             <ProjectStatsCard label="Dibatalkan"     value={stats.dibatalkan}  icon="x"            color="red"     />
-            <ProjectStatsCard
-              label="Total Nilai"
-              value={formatCurrency(stats.totalValue)}
-              icon="dollar-sign"
-              color="purple"
-              sub="Ekskl. dibatalkan"
-            />
           </div>
         )}
       </div>
 
       {/* ── Main Content ── */}
       <div className="flex flex-1 gap-0 px-8 pb-8">
-        {/* Table */}
+        {/* Table — full width now that detail panel is a separate page */}
         <div className="flex-1 min-w-0">
           <ProjectTable
             collection={collection}
@@ -132,19 +116,6 @@ export const ProjectManagementTemplate: React.FC<ProjectManagementTemplateProps>
             onView={onViewProject}
           />
         </div>
-
-        {/* Detail Panel */}
-        {viewingProject && (
-          <div className="ml-4">
-            <ProjectDetailPanel
-              project={viewingProject}
-              saving={panelSaving}
-              onClose={onDetailClose}
-              onEdit={onDetailEdit}
-              onStatusChange={onStatusChange}
-            />
-          </div>
-        )}
       </div>
     </main>
 

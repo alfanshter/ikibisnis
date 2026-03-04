@@ -6,6 +6,7 @@
 import { DashboardRepository } from '@/src/infrastructure/repositories/DashboardRepository';
 import { UserRepository }      from '@/src/infrastructure/repositories/UserRepository';
 import { ProjectRepository }   from '@/src/infrastructure/repositories/ProjectRepository';
+import { QuotationRepository } from '@/src/infrastructure/repositories/QuotationRepository';
 import { FinanceRepository }   from '@/src/infrastructure/repositories/FinanceRepository';
 import { SettingsRepository }  from '@/src/infrastructure/repositories/SettingsRepository';
 
@@ -18,13 +19,25 @@ import {
   GetRolePermissionsUseCase,
   UpdateRolePermissionsUseCase,
 } from '@/src/application/use-cases/user';
-import {
-  GetProjectsUseCase,
+import {  GetProjectsUseCase,
+  GetProjectByIdUseCase,
   CreateProjectUseCase,
   UpdateProjectUseCase,
   DeleteProjectUseCase,
   GetProjectStatsUseCase,
 } from '@/src/application/use-cases/project';
+import {
+  GetQuotationsUseCase,
+  GetQuotationByIdUseCase,
+  GetQuotationStatsUseCase,
+  CreateQuotationUseCase,
+  UpdateQuotationUseCase,
+  SendQuotationUseCase,
+  AccQuotationUseCase,
+  RejectQuotationUseCase,
+  ConvertToProjectUseCase,
+  DeleteQuotationUseCase,
+} from '@/src/application/use-cases/quotation';
 import {
   GetDailyReportUseCase,
   GetBalanceSheetUseCase,
@@ -46,6 +59,7 @@ class DIContainer {
   private dashboardRepository: DashboardRepository;
   private userRepository: UserRepository;
   private projectRepository: ProjectRepository;
+  private quotationRepository: QuotationRepository;
   private financeRepository: FinanceRepository;
   private settingsRepository: SettingsRepository;
 
@@ -57,10 +71,23 @@ class DIContainer {
   private getRolePermissionsUseCase: GetRolePermissionsUseCase;
   private updateRolePermissionsUseCase: UpdateRolePermissionsUseCase;
   private getProjectsUseCase: GetProjectsUseCase;
+  private getProjectByIdUseCase: GetProjectByIdUseCase;
   private createProjectUseCase: CreateProjectUseCase;
   private updateProjectUseCase: UpdateProjectUseCase;
   private deleteProjectUseCase: DeleteProjectUseCase;
   private getProjectStatsUseCase: GetProjectStatsUseCase;
+  // Quotation use-cases
+  private getQuotationsUseCase: GetQuotationsUseCase;
+  private getQuotationByIdUseCase: GetQuotationByIdUseCase;
+  private getQuotationStatsUseCase: GetQuotationStatsUseCase;
+  private createQuotationUseCase: CreateQuotationUseCase;
+  private updateQuotationUseCase: UpdateQuotationUseCase;
+  private sendQuotationUseCase: SendQuotationUseCase;
+  private accQuotationUseCase: AccQuotationUseCase;
+  private rejectQuotationUseCase: RejectQuotationUseCase;
+  private convertToProjectUseCase: ConvertToProjectUseCase;
+  private deleteQuotationUseCase: DeleteQuotationUseCase;
+  //
   private getDailyReportUseCase: GetDailyReportUseCase;
   private getBalanceSheetUseCase: GetBalanceSheetUseCase;
   private getIncomeStatementUseCase: GetIncomeStatementUseCase;
@@ -77,6 +104,7 @@ class DIContainer {
     this.dashboardRepository = new DashboardRepository();
     this.userRepository = new UserRepository();
     this.projectRepository = new ProjectRepository();
+    this.quotationRepository = new QuotationRepository();
     this.financeRepository = new FinanceRepository();
     this.settingsRepository = new SettingsRepository();
 
@@ -88,10 +116,22 @@ class DIContainer {
     this.getRolePermissionsUseCase = new GetRolePermissionsUseCase(this.userRepository);
     this.updateRolePermissionsUseCase = new UpdateRolePermissionsUseCase(this.userRepository);
     this.getProjectsUseCase = new GetProjectsUseCase(this.projectRepository);
+    this.getProjectByIdUseCase = new GetProjectByIdUseCase(this.projectRepository);
     this.createProjectUseCase = new CreateProjectUseCase(this.projectRepository);
     this.updateProjectUseCase = new UpdateProjectUseCase(this.projectRepository);
     this.deleteProjectUseCase = new DeleteProjectUseCase(this.projectRepository);
     this.getProjectStatsUseCase = new GetProjectStatsUseCase(this.projectRepository);
+    // Quotation
+    this.getQuotationsUseCase     = new GetQuotationsUseCase(this.quotationRepository);
+    this.getQuotationByIdUseCase  = new GetQuotationByIdUseCase(this.quotationRepository);
+    this.getQuotationStatsUseCase = new GetQuotationStatsUseCase(this.quotationRepository);
+    this.createQuotationUseCase   = new CreateQuotationUseCase(this.quotationRepository);
+    this.updateQuotationUseCase   = new UpdateQuotationUseCase(this.quotationRepository);
+    this.sendQuotationUseCase     = new SendQuotationUseCase(this.quotationRepository);
+    this.accQuotationUseCase      = new AccQuotationUseCase(this.quotationRepository);
+    this.rejectQuotationUseCase   = new RejectQuotationUseCase(this.quotationRepository);
+    this.convertToProjectUseCase  = new ConvertToProjectUseCase(this.quotationRepository);
+    this.deleteQuotationUseCase   = new DeleteQuotationUseCase(this.quotationRepository);
     this.getDailyReportUseCase = new GetDailyReportUseCase(this.financeRepository);
     this.getBalanceSheetUseCase = new GetBalanceSheetUseCase(this.financeRepository);
     this.getIncomeStatementUseCase = new GetIncomeStatementUseCase(this.financeRepository);
@@ -133,8 +173,12 @@ class DIContainer {
   getUpdateRolePermissionsUseCase(): UpdateRolePermissionsUseCase {
     return this.updateRolePermissionsUseCase;
   }
+  // ─────────────────────────────────────────────────────────────────────────
   getGetProjectsUseCase(): GetProjectsUseCase {
     return this.getProjectsUseCase;
+  }
+  getGetProjectByIdUseCase(): GetProjectByIdUseCase {
+    return this.getProjectByIdUseCase;
   }
   getCreateProjectUseCase(): CreateProjectUseCase {
     return this.createProjectUseCase;
@@ -148,6 +192,38 @@ class DIContainer {
   getGetProjectStatsUseCase(): GetProjectStatsUseCase {
     return this.getProjectStatsUseCase;
   }
+  // ── Quotation ────────────────────────────────────────────────────────────
+  getGetQuotationsUseCase(): GetQuotationsUseCase {
+    return this.getQuotationsUseCase;
+  }
+  getGetQuotationByIdUseCase(): GetQuotationByIdUseCase {
+    return this.getQuotationByIdUseCase;
+  }
+  getGetQuotationStatsUseCase(): GetQuotationStatsUseCase {
+    return this.getQuotationStatsUseCase;
+  }
+  getCreateQuotationUseCase(): CreateQuotationUseCase {
+    return this.createQuotationUseCase;
+  }
+  getUpdateQuotationUseCase(): UpdateQuotationUseCase {
+    return this.updateQuotationUseCase;
+  }
+  getSendQuotationUseCase(): SendQuotationUseCase {
+    return this.sendQuotationUseCase;
+  }
+  getAccQuotationUseCase(): AccQuotationUseCase {
+    return this.accQuotationUseCase;
+  }
+  getRejectQuotationUseCase(): RejectQuotationUseCase {
+    return this.rejectQuotationUseCase;
+  }
+  getConvertToProjectUseCase(): ConvertToProjectUseCase {
+    return this.convertToProjectUseCase;
+  }
+  getDeleteQuotationUseCase(): DeleteQuotationUseCase {
+    return this.deleteQuotationUseCase;
+  }
+  // ─────────────────────────────────────────────────────────────────────────
   getGetDailyReportUseCase(): GetDailyReportUseCase {
     return this.getDailyReportUseCase;
   }

@@ -79,12 +79,32 @@ export const ProjectTable: React.FC<Props> = ({
 
     {/* ── Table ── */}
     <div className="overflow-x-auto flex-1">
-      <table className="w-full text-left">
+      <table className="w-full text-left table-fixed">
+        <colgroup>
+          <col className="w-[26%]" />  {/* Proyek */}
+          <col className="w-[15%]" />  {/* Kategori */}
+          <col className="w-[16%]" />  {/* Klien */}
+          <col className="w-[13%]" />  {/* Status */}
+          <col className="w-[12%]" />  {/* Deadline */}
+          <col className="w-[12%]" />  {/* Nilai */}
+          <col className="w-[6%]"  />  {/* Aksi */}
+        </colgroup>
         <thead>
           <tr className="border-b border-slate-700/50">
-            {['Proyek', 'Kategori', 'Klien', 'Status', 'Deadline', 'Nilai', 'Aksi'].map(h => (
-              <th key={h} className="px-6 py-4 text-slate-400 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
-                {h}
+            {[
+              { label: 'Proyek'   },
+              { label: 'Kategori' },
+              { label: 'Klien'    },
+              { label: 'Status'   },
+              { label: 'Deadline' },
+              { label: 'Nilai', right: true },
+              { label: 'Aksi',  center: true },
+            ].map(h => (
+              <th
+                key={h.label}
+                className={`px-4 py-4 text-slate-400 text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${h.right ? 'text-right' : h.center ? 'text-center' : ''}`}
+              >
+                {h.label}
               </th>
             ))}
           </tr>

@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Icon } from '../atoms/Icon';
 import DIContainer from '@/src/infrastructure/di/container';
 
@@ -36,27 +36,41 @@ const USER_CHILDREN = [
   { name: 'Roles',    icon: 'shield', href: '/users/roles' },
 ];
 
+const PROJECT_CHILDREN = [
+  { name: 'Semua Proyek', icon: 'briefcase', href: '/projects'            },
+  { name: 'Penawaran',    icon: 'document',  href: '/projects/quotations' },
+];
+
 const MENU_ITEMS = [
-  { name: 'Dashboard',        icon: 'grid',      href: '/',         children: null           },
-  { name: 'User Management',  icon: 'users',     href: '/users',    children: USER_CHILDREN  },
-  { name: 'Projects',         icon: 'briefcase', href: '/projects', children: null           },
+  { name: 'Dashboard',        icon: 'grid',      href: '/',         children: null             },
+  { name: 'User Management',  icon: 'users',     href: '/users',    children: USER_CHILDREN    },
+  { name: 'Projects',         icon: 'briefcase', href: '/projects', children: PROJECT_CHILDREN },
   { name: 'Finance',          icon: 'credit',    href: '/finance',  children: FINANCE_CHILDREN },
-  { name: 'Settings',         icon: 'settings',  href: '/settings', children: null           },
+  { name: 'Settings',         icon: 'settings',  href: '/settings', children: null             },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
   const pathname = usePathname();
+  const router   = useRouter();
 
-  const isFinanceActive = pathname.startsWith('/finance');
-  const isUsersActive   = pathname.startsWith('/users');
+  const isFinanceActive  = pathname.startsWith('/finance');
+  const isUsersActive    = pathname.startsWith('/users');
+  const isProjectsActive = pathname.startsWith('/projects');
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     'Finance':         isFinanceActive,
     'User Management': isUsersActive,
+    'Projects':        isProjectsActive,
   });
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpen,       setMobileOpen]       = useState(false);
+  const [showLogoutModal,  setShowLogoutModal]  = useState(false);
 
   const toggleMenu   = (name: string) => setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
   const closeMobile  = () => setMobileOpen(false);
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    router.push('/login');
+  };
 
   // Dynamic store identity from settings
   const [storeName,    setStoreName]    = useState('Nexus Admin');
@@ -229,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
             </Link>
           </div>
           <button
-            onClick={() => alert('Logout — tambahkan auth provider sesuai kebutuhan.')}
+            onClick={() => setShowLogoutModal(true)}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:border-red-500/20 border border-transparent transition-all"
           >
             <Icon name="logout" className="w-4 h-4" />
@@ -237,6 +251,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
           </button>
         </div>
       </aside>
+
+      {/* ── Logout Confirm Modal ── */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-800 border border-slate-700/50 rounded-2xl w-full max-w-sm shadow-2xl p-6 space-y-5">
+            {/* Icon + heading */}
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center">
+                <Icon name="logout" className="w-7 h-7 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-lg">Keluar dari akun?</h3>
+                <p className="text-slate-400 text-sm mt-1">
+                  Sesi Anda akan diakhiri dan Anda akan diarahkan ke halaman login.
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-2.5 text-sm font-medium text-slate-300 bg-slate-700/50 hover:bg-slate-700 rounded-xl transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleLogoutConfirm}
+                className="flex-1 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors"
+              >
+                Ya, Keluar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

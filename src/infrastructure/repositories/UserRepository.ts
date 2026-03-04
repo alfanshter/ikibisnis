@@ -11,7 +11,7 @@ import {
   UpdateUserDTO,
   RolePermissions,
   UserRole,
-  UserAvatar
+  UserAvatar,
 } from '@/src/domain/entities/User';
 import { IUserRepository } from '@/src/domain/repositories/IUserRepository';
 
@@ -35,7 +35,14 @@ const MOCK_USERS: User[] = [
     role: 'Admin',
     status: 'Active',
     lastLogin: new Date(Date.now() - 2 * 60 * 1000),
-    avatar: { initials: 'AR', bgColor: 'bg-blue-500' }
+    avatar: { initials: 'AR', bgColor: 'bg-blue-500' },
+    phone: '081234567890',
+    address: 'Jl. Sudirman No. 1, Jakarta Pusat',
+    jenis_kelamin: 'Laki-laki',
+    tanggal_lahir: '1990-03-15',
+    tempat_lahir: 'Jakarta',
+    no_ktp: '3174010315900001',
+    npwp: '12.345.678.9-000.001',
   },
   {
     id: '2',
@@ -44,7 +51,12 @@ const MOCK_USERS: User[] = [
     role: 'Manager',
     status: 'Active',
     lastLogin: new Date(Date.now() - 60 * 60 * 1000),
-    avatar: { initials: 'SC', bgColor: 'bg-purple-500' }
+    avatar: { initials: 'SC', bgColor: 'bg-purple-500' },
+    phone: '082345678901',
+    address: 'Jl. Gatot Subroto No. 12, Jakarta Selatan',
+    jenis_kelamin: 'Perempuan',
+    tanggal_lahir: '1992-07-22',
+    tempat_lahir: 'Bandung',
   },
   {
     id: '3',
@@ -53,7 +65,13 @@ const MOCK_USERS: User[] = [
     role: 'Staff',
     status: 'Inactive',
     lastLogin: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    avatar: { initials: 'JW', bgColor: 'bg-green-500' }
+    avatar: { initials: 'JW', bgColor: 'bg-green-500' },
+    phone: '083456789012',
+    address: 'Jl. Thamrin No. 5, Jakarta Pusat',
+    jenis_kelamin: 'Laki-laki',
+    tanggal_lahir: '1988-11-05',
+    tempat_lahir: 'Surabaya',
+    no_ktp: '3578051188880003',
   },
   {
     id: '4',
@@ -62,7 +80,12 @@ const MOCK_USERS: User[] = [
     role: 'Staff',
     status: 'Active',
     lastLogin: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    avatar: { initials: 'MG', bgColor: 'bg-orange-500' }
+    avatar: { initials: 'MG', bgColor: 'bg-orange-500' },
+    phone: '084567890123',
+    address: 'Jl. Pemuda No. 8, Semarang',
+    jenis_kelamin: 'Perempuan',
+    tanggal_lahir: '1995-01-30',
+    tempat_lahir: 'Semarang',
   },
   {
     id: '5',
@@ -71,7 +94,14 @@ const MOCK_USERS: User[] = [
     role: 'Manager',
     status: 'Active',
     lastLogin: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    avatar: { initials: 'DK', bgColor: 'bg-teal-500' }
+    avatar: { initials: 'DK', bgColor: 'bg-teal-500' },
+    phone: '085678901234',
+    address: 'Jl. Asia Afrika No. 20, Bandung',
+    jenis_kelamin: 'Laki-laki',
+    tanggal_lahir: '1987-09-14',
+    tempat_lahir: 'Medan',
+    no_ktp: '1271140914870005',
+    npwp: '98.765.432.1-000.005',
   },
   {
     id: '6',
@@ -80,7 +110,12 @@ const MOCK_USERS: User[] = [
     role: 'Staff',
     status: 'Active',
     lastLogin: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    avatar: { initials: 'LP', bgColor: 'bg-pink-500' }
+    avatar: { initials: 'LP', bgColor: 'bg-pink-500' },
+    phone: '086789012345',
+    address: 'Jl. Malioboro No. 3, Yogyakarta',
+    jenis_kelamin: 'Perempuan',
+    tanggal_lahir: '1993-05-18',
+    tempat_lahir: 'Yogyakarta',
   },
   {
     id: '7',
@@ -89,7 +124,13 @@ const MOCK_USERS: User[] = [
     role: 'Staff',
     status: 'Inactive',
     lastLogin: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    avatar: { initials: 'TB', bgColor: 'bg-blue-500' }
+    avatar: { initials: 'TB', bgColor: 'bg-blue-500' },
+    phone: '087890123456',
+    address: 'Jl. Diponegoro No. 10, Surabaya',
+    jenis_kelamin: 'Laki-laki',
+    tanggal_lahir: '1991-12-25',
+    tempat_lahir: 'Surabaya',
+    no_ktp: '3578251291910007',
   },
   {
     id: '8',
@@ -98,7 +139,13 @@ const MOCK_USERS: User[] = [
     role: 'Manager',
     status: 'Active',
     lastLogin: new Date(Date.now() - 30 * 60 * 1000),
-    avatar: { initials: 'NP', bgColor: 'bg-purple-500' }
+    avatar: { initials: 'NP', bgColor: 'bg-purple-500' },
+    phone: '088901234567',
+    address: 'Jl. Imam Bonjol No. 7, Denpasar',
+    jenis_kelamin: 'Perempuan',
+    tanggal_lahir: '1994-04-08',
+    tempat_lahir: 'Denpasar',
+    npwp: '55.444.333.2-000.008',
   }
 ];
 
@@ -163,7 +210,14 @@ export class UserRepository implements IUserRepository {
       role: dto.role,
       status: 'Active',
       lastLogin: new Date(),
-      avatar: makeAvatar(dto.name)
+      avatar: makeAvatar(dto.name),
+      phone:         dto.phone,
+      address:       dto.address,
+      jenis_kelamin: dto.jenis_kelamin,
+      tanggal_lahir: dto.tanggal_lahir,
+      tempat_lahir:  dto.tempat_lahir,
+      no_ktp:        dto.no_ktp,
+      npwp:          dto.npwp,
     };
     usersStore = [newUser, ...usersStore];
     return newUser;

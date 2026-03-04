@@ -36,7 +36,8 @@ const seed: Project[] = [
     assignedTo: 'Alex Rivera',
     createdAt: new Date('2026-02-01'),
     deadline:  new Date('2026-03-15'),
-    notes: 'Termasuk instalasi OS & software perkantoran.'
+    notes: 'Termasuk instalasi OS & software perkantoran.',
+    origin: 'direct',
   },
   {
     id: 'PRJ-002',
@@ -56,6 +57,7 @@ const seed: Project[] = [
     createdAt:   new Date('2026-01-10'),
     deadline:    new Date('2026-01-31'),
     completedAt: new Date('2026-01-28'),
+    origin: 'direct',
   },
   {
     id: 'PRJ-003',
@@ -73,6 +75,9 @@ const seed: Project[] = [
     assignedTo: 'James Wilson',
     createdAt: new Date('2026-02-25'),
     deadline:  new Date('2026-03-10'),
+    origin: 'quotation',
+    quotationId: 'QUO-001',
+    poNumber: 'PO/BPJS/2026/001',
   },
   {
     id: 'PRJ-004',
@@ -91,6 +96,7 @@ const seed: Project[] = [
     assignedTo: 'Maria Garcia',
     createdAt: new Date('2026-02-10'),
     deadline:  new Date('2026-03-20'),
+    origin: 'direct',
   },
   {
     id: 'PRJ-005',
@@ -110,6 +116,8 @@ const seed: Project[] = [
     createdAt:   new Date('2026-01-20'),
     deadline:    new Date('2026-02-10'),
     completedAt: new Date('2026-02-08'),
+    origin: 'quotation',
+    quotationId: 'QUO-002',
   },
   {
     id: 'PRJ-006',
@@ -127,6 +135,7 @@ const seed: Project[] = [
     assignedTo: 'Nina Patel',
     createdAt: new Date('2026-02-27'),
     deadline:  new Date('2026-03-25'),
+    origin: 'direct',
   },
   {
     id: 'PRJ-007',
@@ -144,7 +153,8 @@ const seed: Project[] = [
     assignedTo: 'Lisa Park',
     createdAt: new Date('2026-01-15'),
     deadline:  new Date('2026-02-01'),
-    notes: 'Dibatalkan oleh klien karena perubahan anggaran.'
+    notes: 'Dibatalkan oleh klien karena perubahan anggaran.',
+    origin: 'direct',
   },
   {
     id: 'PRJ-008',
@@ -162,6 +172,7 @@ const seed: Project[] = [
     assignedTo: 'Tom Brown',
     createdAt: new Date('2026-02-15'),
     deadline:  new Date('2026-04-01'),
+    origin: 'direct',
   },
 ];
 
@@ -169,6 +180,13 @@ const seed: Project[] = [
 
 let projectsStore: Project[] = [...seed];
 let nextId = seed.length + 1;
+
+/**
+ * Shared mutable refs — digunakan oleh QuotationRepository.convertToProject
+ * agar konversi penawaran bisa langsung menulis ke store project yang sama.
+ */
+export const projectsStoreRef = { get value() { return projectsStore; }, set value(v: Project[]) { projectsStore = v; } };
+export const nextProjectIdRef  = { get value() { return nextId; },         set value(v: number)    { nextId = v; }         };
 
 export class ProjectRepository implements IProjectRepository {
 
@@ -244,6 +262,9 @@ export class ProjectRepository implements IProjectRepository {
       createdAt:   new Date(),
       deadline:    new Date(dto.deadline),
       notes:       dto.notes,
+      origin:      dto.origin ?? 'direct',
+      ...(dto.quotationId && { quotationId: dto.quotationId }),
+      ...(dto.poNumber    && { poNumber:    dto.poNumber    }),
     };
     projectsStore.unshift(project);
     return project;
@@ -267,6 +288,7 @@ export class ProjectRepository implements IProjectRepository {
       ...(dto.assignedTo  && { assignedTo:  dto.assignedTo }),
       ...(dto.deadline    && { deadline:    new Date(dto.deadline) }),
       ...(dto.notes !== undefined && { notes: dto.notes }),
+      ...(dto.poNumber !== undefined && { poNumber: dto.poNumber }),
       items,
       totalValue: calcProjectTotal(items),
       ...(dto.status === 'Selesai' && !existing.completedAt && { completedAt: new Date() }),
