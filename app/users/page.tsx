@@ -5,41 +5,66 @@ import { UserManagementTemplate } from '@/src/presentation/components/templates/
 
 export default function UsersPage() {
   const {
-    userCollection,
-    tableLoading,
-    modalSaving,
-    deleting,
-    showAddModal,
+    collection,
+    query,
+    toast,
+    listLoading,
+    saving,
+    showCreateModal,
+    showEditModal,
+    showDeleteConfirm,
+    showChangePasswordModal,
     editingUser,
     deletingUser,
+    passwordUser,
+    handleCreate,
+    handleUpdate,
+    handleChangePassword,
+    handleToggleStatus,
+    handleDelete,
     handlePageChange,
-    handleAddUser,
-    handleEditUser,
-    handleDeleteUser,
-    handleModalClose,
-    handleModalSubmit,
-    handleDeleteConfirm,
-    handleDeleteModalClose,
+    handleSearchChange,
+    handleFilterChange,
+    openCreate,
+    openEdit,
+    openDeleteConfirm,
+    openChangePassword,
+    closeCreate,
+    closeEdit,
+    closeDeleteConfirm,
+    closeChangePassword,
   } = useUserManagement();
 
   return (
     <UserManagementTemplate
-      userCollection={userCollection}
-      tableLoading={tableLoading}
-      modalSaving={modalSaving}
-      deleting={deleting}
-      showAddModal={showAddModal}
+      collection={collection}
+      query={query}
+      toast={toast}
+      listLoading={listLoading}
+      saving={saving}
+      showCreateModal={showCreateModal}
+      showEditModal={showEditModal}
+      showDeleteConfirm={showDeleteConfirm}
+      showChangePasswordModal={showChangePasswordModal}
       editingUser={editingUser}
       deletingUser={deletingUser}
+      passwordUser={passwordUser}
       onPageChange={handlePageChange}
-      onAddUser={handleAddUser}
-      onEditUser={handleEditUser}
-      onDeleteUser={handleDeleteUser}
-      onModalClose={handleModalClose}
-      onModalSubmit={handleModalSubmit}
-      onDeleteConfirm={handleDeleteConfirm}
-      onDeleteModalClose={handleDeleteModalClose}
+      onSearchChange={handleSearchChange}
+      onFilterChange={handleFilterChange}
+      onCreate={handleCreate}
+      onUpdate={handleUpdate}
+      onChangePassword={handleChangePassword}
+      onToggleStatus={handleToggleStatus}
+      onDelete={handleDelete}
+      openCreate={openCreate}
+      openEdit={openEdit}
+      openDeleteConfirm={openDeleteConfirm}
+      openChangePassword={openChangePassword}
+      closeCreate={closeCreate}
+      closeEdit={closeEdit}
+      closeDeleteConfirm={closeDeleteConfirm}
+      closeChangePassword={closeChangePassword}
     />
   );
 }
-

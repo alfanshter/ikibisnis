@@ -4,24 +4,28 @@
  */
 
 import React from 'react';
-import { User, UserCollection } from '@/src/domain/entities/User';
+import { ApiUser, ApiUserCollection } from '@/src/domain/entities/User';
 import { UserTableRow } from '../molecules/UserTableRow';
 import { Pagination } from '../molecules/Pagination';
 
 interface UserTableProps {
-  userCollection: UserCollection;
-  onEdit:       (user: User) => void;
-  onDelete:     (user: User) => void;
-  onPageChange: (page: number) => void;
-  loading?:     boolean;
+  collection:       ApiUserCollection | null;
+  onEdit:           (user: ApiUser) => void;
+  onDelete:         (user: ApiUser) => void;
+  onToggle:         (user: ApiUser) => void;
+  onChangePassword: (user: ApiUser) => void;
+  onPageChange:     (page: number) => void;
+  loading?:         boolean;
 }
 
-const TABLE_HEADERS = ['USER', 'ROLE', 'STATUS', 'LAST LOGIN', 'ACTIONS'];
+const TABLE_HEADERS = ['USER', 'ROLE', 'STATUS', 'CREATED', 'ACTIONS'];
 
 export const UserTable: React.FC<UserTableProps> = ({
-  userCollection,
+  collection,
   onEdit,
   onDelete,
+  onToggle,
+  onChangePassword,
   onPageChange,
   loading = false
 }) => (
@@ -52,19 +56,21 @@ export const UserTable: React.FC<UserTableProps> = ({
                 ))}
               </tr>
             ))
-          ) : userCollection.users.length === 0 ? (
+          ) : !collection || collection.data.length === 0 ? (
             <tr>
               <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
                 No users found
               </td>
             </tr>
           ) : (
-            userCollection.users.map(user => (
+            collection.data.map(user => (
               <UserTableRow
                 key={user.id}
                 user={user}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onToggle={onToggle}
+                onChangePassword={onChangePassword}
               />
             ))
           )}
@@ -72,11 +78,16 @@ export const UserTable: React.FC<UserTableProps> = ({
       </table>
     </div>
 
-    <div className="border-t border-slate-700/50 px-4">
-      <Pagination
-        pagination={userCollection.pagination}
-        onPageChange={onPageChange}
-      />
-    </div>
+    {collection && (
+      <div className="border-t border-slate-700/50 px-4">
+        <Pagination
+          page={collection.page}
+          totalPages={collection.totalPages}
+          total={collection.total}
+          limit={collection.limit}
+          onPageChange={onPageChange}
+        />
+      </div>
+    )}
   </div>
 );

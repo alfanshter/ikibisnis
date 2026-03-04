@@ -1,113 +1,214 @@
 /**
- * Custom Hook: useUserManagement
- * Encapsulates all state + side effects for the User Management page
+ * Hook: useUserManagement
+ * All operations go through the real /api/v1/users REST API.
+ * Pattern mirrors useRoleManagement: hook → fetch → backend.
  */
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  User,
-  UserCollection,
-  CreateUserDTO,
-  UpdateUserDTO,
+  ApiUser,
+  ApiUserCollection,
+  CreateUserApiDTO,
+  UpdateUserApiDTO,
+  ChangePasswordDTO,
+  GetUsersQuery,
 } from '@/src/domain/entities/User';
-import DIContainer from '@/src/infrastructure/di/container';
 
-const DEFAULT_EMPTY_COLLECTION = new UserCollection(
-  [],
-  { currentPage: 1, totalPages: 1, totalUsers: 0, perPage: 4 }
-);
+// ── Constants ────────────────────────────────────────────────────────────────
+const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const BASE    = `${BACKEND}/api/v1/users`;
 
+// ── HTTP helper (same double-unwrap as useRoleManagement) ─────────────────
+async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
+  const res  = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...init,
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message ?? 'API error');
+  const outer = json.data;
+  if (outer !== null && typeof outer === 'object' && 'success' in outer && 'data' in outer) {
+    if (!outer.success) throw new Error(outer.message ?? 'API error');
+    return outer.data as T;
+  }
+  return outer as T;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+export interface ToastState { msg: string; type: 'success' | 'error' }
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
 export const useUserManagement = () => {
-  /* ── Data ── */
-  const [userCollection, setUserCollection] = useState<UserCollection>(DEFAULT_EMPTY_COLLECTION);
+  // ── State ────────────────────────────────────────────────────────────────
+  const [collection,        setCollection]        = useState<ApiUserCollection | null>(null);
+  const [listLoading,       setListLoading]        = useState(true);
+  const [saving,            setSaving]             = useState(false);
+  const [toast,             setToast]              = useState<ToastState | null>(null);
+  const [query,             setQuery]              = useState<GetUsersQuery>({ page: 1, limit: 10 });
 
-  /* ── Loading / saving flags ── */
-  const [tableLoading, setTableLoading] = useState(true);
-  const [modalSaving,  setModalSaving]  = useState(false);
-  const [deleting,     setDeleting]     = useState(false);
+  // Modal state
+  const [showCreateModal,       setShowCreateModal]       = useState(false);
+  const [showEditModal,         setShowEditModal]         = useState(false);
+  const [showDeleteConfirm,     setShowDeleteConfirm]     = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [editingUser,           setEditingUser]           = useState<ApiUser | null>(null);
+  const [deletingUser,          setDeletingUser]          = useState<ApiUser | null>(null);
+  const [passwordUser,          setPasswordUser]          = useState<ApiUser | null>(null);
 
-  /* ── Modal state ── */
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingUser,  setEditingUser]  = useState<User | null>(null);
-  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  /* ── Pagination ── */
-  const [currentPage, setCurrentPage] = useState(1);
+  // ── Toast helper ─────────────────────────────────────────────────────────
+  const showToast = useCallback((msg: string, type: ToastState['type'] = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  }, []);
 
-  /* ── DI shortcuts ── */
-  const container = DIContainer.getInstance();
-
-  /* ── Load users ── */
-  const loadUsers = useCallback(async (page: number) => {
+  // ── Fetch list ───────────────────────────────────────────────────────────
+  const fetchUsers = useCallback(async (q: GetUsersQuery) => {
+    abortRef.current?.abort();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    setListLoading(true);
     try {
-      setTableLoading(true);
-      const data = await container.getGetUsersUseCase().execute(page, 4);
-      setUserCollection(data);
+      const sp = new URLSearchParams();
+      sp.set('page',  String(q.page  ?? 1));
+      sp.set('limit', String(q.limit ?? 10));
+      if (q.search)                sp.set('search',   q.search);
+      if (q.isActive !== undefined) sp.set('isActive', String(q.isActive));
+      if (q.gender)                sp.set('gender',   q.gender);
+      if (q.roleId)                sp.set('roleId',   q.roleId);
+
+      const data = await apiFetch<ApiUserCollection>(
+        `${BASE}?${sp.toString()}`,
+        { signal: ctrl.signal }
+      );
+      setCollection(data);
     } catch (err) {
-      console.error('Failed to load users:', err);
+      if ((err as Error).name !== 'AbortError')
+        showToast((err as Error).message, 'error');
     } finally {
-      setTableLoading(false);
+      setListLoading(false);
     }
-  }, [container]);
+  }, [showToast]);
 
-  useEffect(() => { loadUsers(currentPage); }, [currentPage, loadUsers]);
+  useEffect(() => { fetchUsers(query); }, [query, fetchUsers]);
 
-  /* ── Pagination ── */
-  const handlePageChange = (page: number) => setCurrentPage(page);
-
-  /* ── Add / Edit user modal ── */
-  const handleAddUser    = () => { setEditingUser(null); setShowAddModal(true); };
-  const handleEditUser   = (user: User) => { setShowAddModal(false); setEditingUser(user); };
-  const handleModalClose = () => { setShowAddModal(false); setEditingUser(null); };
-
-  const handleModalSubmit = async (data: CreateUserDTO | UpdateUserDTO) => {
+  // ── Create ────────────────────────────────────────────────────────────────
+  const handleCreate = useCallback(async (dto: CreateUserApiDTO) => {
+    setSaving(true);
     try {
-      setModalSaving(true);
-      if ('password' in data) {
-        await container.getCreateUserUseCase().execute(data as CreateUserDTO);
-      } else {
-        await container.getUpdateUserUseCase().execute(data as UpdateUserDTO);
-      }
-      handleModalClose();
-      await loadUsers(currentPage);
+      const user = await apiFetch<ApiUser>(BASE, {
+        method: 'POST',
+        body:   JSON.stringify(dto),
+      });
+      setShowCreateModal(false);
+      showToast(`Pengguna "${user.fullName}" berhasil dibuat`);
+      setQuery(q => ({ ...q }));
     } catch (err) {
-      console.error('Failed to save user:', err);
+      showToast((err as Error).message, 'error');
     } finally {
-      setModalSaving(false);
+      setSaving(false);
     }
-  };
+  }, [showToast]);
 
-  /* ── Delete user ── */
-  const handleDeleteUser       = (user: User) => setDeletingUser(user);
-  const handleDeleteModalClose = () => setDeletingUser(null);
+  // ── Update ────────────────────────────────────────────────────────────────
+  const handleUpdate = useCallback(async (id: string, dto: UpdateUserApiDTO) => {
+    setSaving(true);
+    try {
+      const user = await apiFetch<ApiUser>(`${BASE}/${id}`, {
+        method: 'PUT',
+        body:   JSON.stringify(dto),
+      });
+      setShowEditModal(false);
+      setEditingUser(null);
+      showToast(`Pengguna "${user.fullName}" berhasil diperbarui`);
+      setQuery(q => ({ ...q }));
+    } catch (err) {
+      showToast((err as Error).message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [showToast]);
 
-  const handleDeleteConfirm = async () => {
+  // ── Change password ───────────────────────────────────────────────────────
+  const handleChangePassword = useCallback(async (id: string, dto: ChangePasswordDTO) => {
+    setSaving(true);
+    try {
+      await apiFetch<{ message: string }>(`${BASE}/${id}/change-password`, {
+        method: 'PATCH',
+        body:   JSON.stringify(dto),
+      });
+      setShowChangePasswordModal(false);
+      setPasswordUser(null);
+      showToast('Password berhasil diubah');
+    } catch (err) {
+      showToast((err as Error).message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [showToast]);
+
+  // ── Toggle status ─────────────────────────────────────────────────────────
+  const handleToggleStatus = useCallback(async (user: ApiUser) => {
+    try {
+      const updated = await apiFetch<ApiUser>(`${BASE}/${user.id}/toggle-status`, {
+        method: 'PATCH',
+      });
+      showToast(`Status "${updated.fullName}" → ${updated.isActive ? 'Aktif' : 'Non-aktif'}`);
+      setQuery(q => ({ ...q }));
+    } catch (err) {
+      showToast((err as Error).message, 'error');
+    }
+  }, [showToast]);
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  const handleDelete = useCallback(async () => {
     if (!deletingUser) return;
+    setSaving(true);
     try {
-      setDeleting(true);
-      await container.getDeleteUserUseCase().execute(deletingUser.id);
+      await apiFetch<{ message: string }>(`${BASE}/${deletingUser.id}`, { method: 'DELETE' });
+      showToast(`Pengguna "${deletingUser.fullName}" berhasil dihapus`);
+      setShowDeleteConfirm(false);
       setDeletingUser(null);
-      const newPage =
-        userCollection.users.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
-      await loadUsers(newPage);
-      setCurrentPage(newPage);
+      setQuery(q => ({ ...q }));
     } catch (err) {
-      console.error('Failed to delete user:', err);
+      showToast((err as Error).message, 'error');
     } finally {
-      setDeleting(false);
+      setSaving(false);
     }
-  };
+  }, [deletingUser, showToast]);
+
+  // ── Query helpers ─────────────────────────────────────────────────────────
+  const handlePageChange   = (page: number)   => setQuery(q => ({ ...q, page }));
+  const handleSearchChange = (search: string) => setQuery(q => ({ ...q, search: search || undefined, page: 1 }));
+  const handleFilterChange = (patch: Partial<GetUsersQuery>) => setQuery(q => ({ ...q, ...patch, page: 1 }));
+
+  // ── Modal openers ─────────────────────────────────────────────────────────
+  const openCreate          = ()           => setShowCreateModal(true);
+  const openEdit            = (u: ApiUser) => { setEditingUser(u); setShowEditModal(true); };
+  const openDeleteConfirm   = (u: ApiUser) => { setDeletingUser(u); setShowDeleteConfirm(true); };
+  const openChangePassword  = (u: ApiUser) => { setPasswordUser(u); setShowChangePasswordModal(true); };
+
+  const closeCreate         = () => setShowCreateModal(false);
+  const closeEdit           = () => { setShowEditModal(false); setEditingUser(null); };
+  const closeDeleteConfirm  = () => { setShowDeleteConfirm(false); setDeletingUser(null); };
+  const closeChangePassword = () => { setShowChangePasswordModal(false); setPasswordUser(null); };
 
   return {
-    userCollection,
-    tableLoading, modalSaving, deleting,
-    showAddModal, editingUser, deletingUser,
-    handlePageChange,
-    handleAddUser, handleEditUser, handleDeleteUser,
-    handleModalClose, handleModalSubmit,
-    handleDeleteConfirm, handleDeleteModalClose,
+    // data
+    collection, query, listLoading, saving, toast,
+    // modal state
+    showCreateModal, showEditModal, showDeleteConfirm, showChangePasswordModal,
+    editingUser, deletingUser, passwordUser,
+    // actions
+    handleCreate, handleUpdate, handleChangePassword,
+    handleToggleStatus, handleDelete,
+    // query
+    handlePageChange, handleSearchChange, handleFilterChange,
+    // modal open/close
+    openCreate, openEdit, openDeleteConfirm, openChangePassword,
+    closeCreate, closeEdit, closeDeleteConfirm, closeChangePassword,
   };
 };
-

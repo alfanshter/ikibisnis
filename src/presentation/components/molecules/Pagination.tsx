@@ -4,18 +4,21 @@
  */
 
 import React from 'react';
-import { UserPagination } from '@/src/domain/entities/User';
 import { Icon } from '../atoms/Icon';
 
 interface PaginationProps {
-  pagination: UserPagination;
+  page:         number;
+  totalPages:   number;
+  total:        number;
+  limit:        number;
   onPageChange: (page: number) => void;
 }
 
-export const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange }) => {
-  const { currentPage, totalPages, totalUsers, perPage } = pagination;
-  const start = (currentPage - 1) * perPage + 1;
-  const end   = Math.min(currentPage * perPage, totalUsers);
+export const Pagination: React.FC<PaginationProps> = ({ page, totalPages, total, limit, onPageChange }) => {
+  const currentPage = page;
+  const start = (currentPage - 1) * limit + 1;
+  const end   = Math.min(currentPage * limit, total);
+  const totalUsers = total;
 
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 

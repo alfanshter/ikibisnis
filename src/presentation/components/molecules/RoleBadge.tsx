@@ -1,23 +1,28 @@
 /**
  * Molecule Component: RoleBadge
- * Displays user role with matching color pill
+ * Displays a role pill using the role's own badgeColor from the API.
  */
 
 import React from 'react';
-import { UserRole } from '@/src/domain/entities/User';
 
 interface RoleBadgeProps {
-  role: UserRole;
+  name:       string;
+  badgeColor?: string;  // hex color from API e.g. "#DC2626"
 }
 
-const ROLE_STYLES: Record<UserRole, string> = {
-  Admin:   'bg-purple-500/20 text-purple-300 border border-purple-500/30',
-  Manager: 'bg-blue-500/20   text-blue-300   border border-blue-500/30',
-  Staff:   'bg-green-500/20  text-green-300  border border-green-500/30'
-};
-
-export const RoleBadge: React.FC<RoleBadgeProps> = ({ role }) => (
-  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide ${ROLE_STYLES[role]}`}>
-    {role.toUpperCase()}
+export const RoleBadge: React.FC<RoleBadgeProps> = ({ name, badgeColor }) => (
+  <span
+    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide border"
+    style={badgeColor ? {
+      backgroundColor: `${badgeColor}22`,
+      color:           badgeColor,
+      borderColor:     `${badgeColor}55`,
+    } : {
+      backgroundColor: 'rgba(107,114,128,0.15)',
+      color:           '#9ca3af',
+      borderColor:     'rgba(107,114,128,0.3)',
+    }}
+  >
+    {name.toUpperCase()}
   </span>
 );

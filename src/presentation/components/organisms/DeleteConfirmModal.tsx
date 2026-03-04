@@ -4,12 +4,12 @@
  */
 
 import React from 'react';
-import { User } from '@/src/domain/entities/User';
+import { ApiUser } from '@/src/domain/entities/User';
 import { Icon } from '../atoms/Icon';
 import { UserAvatarComponent } from '../molecules/UserAvatar';
 
 interface DeleteConfirmModalProps {
-  user:     User;
+  user:     ApiUser;
   onClose:  () => void;
   onConfirm: () => Promise<void>;
   deleting?: boolean;
@@ -34,9 +34,9 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
 
       {/* User card */}
       <div className="mx-6 mb-6 flex items-center gap-3 p-4 bg-slate-900/50 rounded-xl border border-slate-700/50">
-        <UserAvatarComponent avatar={user.avatar} name={user.name} size="md" />
+        <UserAvatarComponent fullName={user.fullName} size="md" />
         <div>
-          <p className="text-white font-semibold text-sm">{user.name}</p>
+          <p className="text-white font-semibold text-sm">{user.fullName}</p>
           <p className="text-slate-400 text-xs">{user.email}</p>
         </div>
       </div>
@@ -63,3 +63,4 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
     </div>
   </div>
 );
+

@@ -1,30 +1,45 @@
 /**
  * Organism Component: UserModal
- * Modal dialog for creating or editing a user — with extended profile fields.
+ * Create or edit a user — fields match POST/PUT /api/v1/users exactly.
  */
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  User, UserRole, UserStatus, JenisKelamin,
-  CreateUserDTO, UpdateUserDTO,
+  ApiUser, Gender,
+  CreateUserApiDTO, UpdateUserApiDTO,
 } from '@/src/domain/entities/User';
 import { Icon } from '../atoms/Icon';
 
+// ── Role option fetched from roles API ────────────────────────────────────
+interface RoleOption { id: string; name: string; badgeColor: string }
+
 interface UserModalProps {
   mode:     'add' | 'edit';
-  user?:    User;
+  user?:    ApiUser;
   onClose:  () => void;
-  onSubmit: (data: CreateUserDTO | UpdateUserDTO) => Promise<void>;
+  onSubmit: (data: CreateUserApiDTO | UpdateUserApiDTO) => Promise<void>;
   saving?:  boolean;
 }
 
-const ROLES: UserRole[]         = ['Admin', 'Manager', 'Staff'];
-const STATUSES: UserStatus[]    = ['Active', 'Inactive'];
-const GENDERS: JenisKelamin[]   = ['Laki-laki', 'Perempuan'];
+const GENDERS: { value: Gender; label: string }[] = [
+  { value: 'male',   label: 'Laki-laki' },
+  { value: 'female', label: 'Perempuan' },
+];
 
-/* ─── Reusable field components ────────────────────────── */
+/* ─── Password strength rule ─────────────────────────────────────────────── */
+const validatePasswordStrength = (pw: string): string | null => {
+  if (!pw)              return 'Password wajib diisi';
+  if (pw.length < 8)   return 'Password minimal 8 karakter';
+  if (!/[A-Z]/.test(pw)) return 'Password harus mengandung huruf kapital (A-Z)';
+  if (!/[a-z]/.test(pw)) return 'Password harus mengandung huruf kecil (a-z)';
+  if (!/[0-9]/.test(pw)) return 'Password harus mengandung angka (0-9)';
+  if (!/[^A-Za-z0-9]/.test(pw)) return 'Password harus mengandung karakter spesial (!@#$%^&* dll)';
+  return null;
+};
+
+/* ─── Reusable field components ──────────────────────────────────────────── */
 const Label: React.FC<{ children: React.ReactNode; optional?: boolean }> = ({ children, optional }) => (
   <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">
     {children}
@@ -37,37 +52,71 @@ const inputCls = (err?: string) =>
 
 const selectCls = 'w-full bg-slate-900/50 border border-slate-700/50 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/60 transition-colors appearance-none cursor-pointer';
 
-/* ─── Main component ────────────────────────────────────── */
+/* ─── Main component ─────────────────────────────────────────────────────── */
 export const UserModal: React.FC<UserModalProps> = ({
   mode, user, onClose, onSubmit, saving = false,
 }) => {
   // Identity
-  const [name,          setName]         = useState(user?.name          ?? '');
-  const [email,         setEmail]        = useState(user?.email         ?? '');
-  const [role,          setRole]         = useState<UserRole>(user?.role ?? 'Staff');
-  const [status,        setStatus]       = useState<UserStatus>(user?.status ?? 'Active');
-  const [password,      setPassword]     = useState('');
+  const [fullName,  setFullName]  = useState(user?.fullName  ?? '');
+  const [email,     setEmail]     = useState(user?.email     ?? '');
+  const [roleId,    setRoleId]    = useState(user?.roleId ?? '');
+  const [password,  setPassword]  = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   // Contact
-  const [phone,         setPhone]        = useState(user?.phone         ?? '');
-  const [address,       setAddress]      = useState(user?.address       ?? '');
+  const [phone,     setPhone]     = useState(user?.phone    ?? '');
+  const [address,   setAddress]   = useState(user?.address  ?? '');
   // Personal
-  const [jenisKelamin,  setJenisKelamin] = useState<JenisKelamin | ''>(user?.jenis_kelamin ?? '');
-  const [tanggalLahir,  setTanggalLahir] = useState(user?.tanggal_lahir ?? '');
-  const [tempatLahir,   setTempatLahir]  = useState(user?.tempat_lahir  ?? '');
-  // Legal (optional)
-  const [noKtp,         setNoKtp]        = useState(user?.no_ktp        ?? '');
-  const [npwp,          setNpwp]         = useState(user?.npwp          ?? '');
+  const [gender,       setGender]      = useState<Gender | ''>(user?.gender      ?? '');
+  const [birthDate,    setBirthDate]   = useState(user?.birthDate   ?? '');
+  const [birthPlace,   setBirthPlace]  = useState(user?.birthPlace  ?? '');
+  // Legal
+  const [nik,  setNik]  = useState(user?.nik  ?? '');
+  const [npwp, setNpwp] = useState(user?.npwp ?? '');
+
+  // Roles list from API
+  const [roles,       setRoles]       = useState<RoleOption[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(`${BACKEND}/api/v1/roles?limit=100`, { signal: ctrl.signal })
+      .then(r => r.json())
+      .then(json => {
+        // unwrap same double-wrap pattern
+        const outer = json?.data;
+        const inner = (outer && 'data' in outer) ? outer.data : outer;
+        const list: RoleOption[] = (inner?.data ?? []).map((r: { id: string; name: string; badgeColor: string }) => ({
+          id: r.id, name: r.name, badgeColor: r.badgeColor,
+        }));
+        setRoles(list);
+        if (!roleId && list.length > 0) setRoleId(list[0].id);
+      })
+      .catch(() => {/* silent */})
+      .finally(() => setRolesLoading(false));
+    return () => ctrl.abort();
+  }, [BACKEND, roleId]);
+
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!name.trim())  errs.name  = 'Nama wajib diisi';
-    if (!email.trim()) errs.email = 'Email wajib diisi';
+    if (!fullName.trim()) errs.fullName = 'Nama wajib diisi';
+    if (!email.trim())    errs.email    = 'Email wajib diisi';
     else if (!email.includes('@')) errs.email = 'Format email tidak valid';
-    if (mode === 'add' && !password) errs.password = 'Password wajib diisi';
-    if (phone && !/^[0-9+\-\s]{7,15}$/.test(phone)) errs.phone = 'Format nomor tidak valid';
-    if (noKtp && noKtp.length !== 16) errs.no_ktp = 'NIK harus 16 digit';
+    if (!roleId)          errs.roleId   = 'Role wajib dipilih';
+    if (mode === 'add') {
+      const pwErr = validatePasswordStrength(password);
+      if (pwErr) errs.password = pwErr;
+      if (!confirmPassword) errs.confirmPassword = 'Konfirmasi password wajib diisi';
+      else if (password !== confirmPassword) errs.confirmPassword = 'Password tidak cocok';
+      if (!phone.trim())   errs.phone   = 'Nomor HP wajib diisi';
+      if (!address.trim()) errs.address = 'Alamat wajib diisi';
+      if (!gender)         errs.gender  = 'Jenis kelamin wajib dipilih';
+    }
+    if (nik  && nik.length  !== 16) errs.nik  = 'NIK harus 16 digit';
+    if (npwp && npwp.length !== 15) errs.npwp = 'NPWP harus 15 digit';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -75,20 +124,29 @@ export const UserModal: React.FC<UserModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    const common = {
-      name, email, role,
-      phone:         phone       || undefined,
-      address:       address     || undefined,
-      jenis_kelamin: (jenisKelamin || undefined) as JenisKelamin | undefined,
-      tanggal_lahir: tanggalLahir || undefined,
-      tempat_lahir:  tempatLahir  || undefined,
-      no_ktp:        noKtp        || undefined,
-      npwp:          npwp         || undefined,
-    };
     if (mode === 'add') {
-      await onSubmit({ ...common, password } as CreateUserDTO);
+      await onSubmit({
+        fullName, email, roleId,
+        password, confirmPassword,
+        phone, address,
+        gender: gender as Gender,
+        birthPlace:  birthPlace  || undefined,
+        birthDate:   birthDate   || undefined,
+        nik:         nik         || undefined,
+        npwp:        npwp        || undefined,
+      } as CreateUserApiDTO);
     } else {
-      await onSubmit({ id: user!.id, ...common, status } as UpdateUserDTO);
+      await onSubmit({
+        fullName:    fullName    || undefined,
+        phone:       phone       || undefined,
+        address:     address     || undefined,
+        gender:      (gender as Gender) || undefined,
+        birthPlace:  birthPlace  || undefined,
+        birthDate:   birthDate   || undefined,
+        nik:         nik         || undefined,
+        npwp:        npwp        || undefined,
+        roleId:      roleId      || undefined,
+      } as UpdateUserApiDTO);
     }
   };
 
@@ -111,146 +169,143 @@ export const UserModal: React.FC<UserModalProps> = ({
           </button>
         </div>
 
-        {/* ── Scrollable form body ── */}
+        {/* ── Scrollable body ── */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
 
-            {/* ── Section: Akun ── */}
+            {/* ── Akun ── */}
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <Icon name="user" className="w-3.5 h-3.5" /> Informasi Akun
               </p>
               <div className="space-y-4">
-                {/* Name */}
                 <div>
                   <Label>Nama Lengkap</Label>
-                  <input type="text" value={name} onChange={e => setName(e.target.value)}
-                    placeholder="contoh: Budi Santoso" className={inputCls(errors.name)} />
-                  {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                  <input type="text" value={fullName} onChange={e => setFullName(e.target.value)}
+                    placeholder="contoh: Budi Santoso" className={inputCls(errors.fullName)} />
+                  {errors.fullName && <p className="text-red-400 text-xs mt-1">{errors.fullName}</p>}
                 </div>
 
-                {/* Email */}
-                <div>
-                  <Label>Email</Label>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                    placeholder="email@perusahaan.com" className={inputCls(errors.email)} />
-                  {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
-                </div>
-
-                {/* Role + Status */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Role</Label>
-                    <select value={role} onChange={e => setRole(e.target.value as UserRole)} className={selectCls}>
-                      {ROLES.map(r => <option key={r} value={r} className="bg-slate-900">{r}</option>)}
-                    </select>
-                  </div>
-                  {mode === 'edit' && (
-                    <div>
-                      <Label>Status</Label>
-                      <select value={status} onChange={e => setStatus(e.target.value as UserStatus)} className={selectCls}>
-                        {STATUSES.map(s => <option key={s} value={s} className="bg-slate-900">{s}</option>)}
-                      </select>
-                    </div>
-                  )}
-                </div>
-
-                {/* Password (add only) */}
                 {mode === 'add' && (
                   <div>
-                    <Label>Password</Label>
-                    <div className="relative">
+                    <Label>Email</Label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="email@perusahaan.com" className={inputCls(errors.email)} />
+                    {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                  </div>
+                )}
+
+                <div>
+                  <Label>Role</Label>
+                  {rolesLoading ? (
+                    <div className="h-10 bg-slate-700/50 rounded-lg animate-pulse" />
+                  ) : (
+                    <select value={roleId} onChange={e => setRoleId(e.target.value)} className={selectCls}>
+                      <option value="" className="bg-slate-900">-- Pilih Role --</option>
+                      {roles.map(r => (
+                        <option key={r.id} value={r.id} className="bg-slate-900">{r.name}</option>
+                      ))}
+                    </select>
+                  )}
+                  {errors.roleId && <p className="text-red-400 text-xs mt-1">{errors.roleId}</p>}
+                </div>
+
+                {mode === 'add' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Password</Label>
                       <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                        placeholder="••••••••" className={inputCls(errors.password) + ' pr-10'} />
-                      <Icon name="lock" className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                        placeholder="min. 8 karakter" className={inputCls(errors.password)} />
+                      {errors.password
+                        ? <p className="text-red-400 text-xs mt-1">{errors.password}</p>
+                        : <p className="text-slate-600 text-xs mt-1">Huruf besar, kecil, angka & simbol</p>
+                      }
                     </div>
-                    {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+                    <div>
+                      <Label>Konfirmasi Password</Label>
+                      <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                        placeholder="ulangi password" className={inputCls(errors.confirmPassword)} />
+                      {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* ── Divider ── */}
             <div className="border-t border-slate-700/30" />
 
-            {/* ── Section: Kontak ── */}
+            {/* ── Kontak ── */}
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <Icon name="phone" className="w-3.5 h-3.5" /> Kontak & Alamat
               </p>
               <div className="space-y-4">
-                {/* Phone */}
                 <div>
                   <Label>Nomor HP</Label>
                   <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                     placeholder="contoh: 081234567890" className={inputCls(errors.phone)} />
                   {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
                 </div>
-                {/* Address */}
                 <div>
                   <Label>Alamat</Label>
                   <textarea value={address} onChange={e => setAddress(e.target.value)} rows={2}
-                    placeholder="Jl. Contoh No. 1, Kota" className={inputCls() + ' resize-none'} />
+                    placeholder="Jl. Contoh No. 1, Kota" className={inputCls(errors.address) + ' resize-none'} />
+                  {errors.address && <p className="text-red-400 text-xs mt-1">{errors.address}</p>}
                 </div>
               </div>
             </div>
 
-            {/* ── Divider ── */}
             <div className="border-t border-slate-700/30" />
 
-            {/* ── Section: Data Pribadi ── */}
+            {/* ── Data Pribadi ── */}
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <Icon name="user" className="w-3.5 h-3.5" /> Data Pribadi
               </p>
               <div className="space-y-4">
-                {/* Jenis Kelamin */}
                 <div>
                   <Label>Jenis Kelamin</Label>
-                  <select value={jenisKelamin} onChange={e => setJenisKelamin(e.target.value as JenisKelamin | '')} className={selectCls}>
+                  <select value={gender} onChange={e => setGender(e.target.value as Gender | '')} className={selectCls}>
                     <option value="" className="bg-slate-900">-- Pilih --</option>
-                    {GENDERS.map(g => <option key={g} value={g} className="bg-slate-900">{g}</option>)}
+                    {GENDERS.map(g => <option key={g.value} value={g.value} className="bg-slate-900">{g.label}</option>)}
                   </select>
+                  {errors.gender && <p className="text-red-400 text-xs mt-1">{errors.gender}</p>}
                 </div>
-
-                {/* Tempat + Tanggal Lahir */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Tempat Lahir</Label>
-                    <input type="text" value={tempatLahir} onChange={e => setTempatLahir(e.target.value)}
-                      placeholder="contoh: Jakarta" className={inputCls()} />
+                    <Label optional>Tempat Lahir</Label>
+                    <input type="text" value={birthPlace} onChange={e => setBirthPlace(e.target.value)}
+                      placeholder="contoh: Bandung" className={inputCls()} />
                   </div>
                   <div>
-                    <Label>Tanggal Lahir</Label>
-                    <input type="date" value={tanggalLahir} onChange={e => setTanggalLahir(e.target.value)}
-                      className={inputCls() + ' scheme-dark'} />
+                    <Label optional>Tanggal Lahir</Label>
+                    <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)}
+                      className={inputCls()} />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ── Divider ── */}
             <div className="border-t border-slate-700/30" />
 
-            {/* ── Section: Dokumen Legal (opsional) ── */}
+            {/* ── Dokumen Legal ── */}
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <Icon name="archive" className="w-3.5 h-3.5" /> Dokumen Legal
                 <span className="text-slate-600 normal-case font-normal tracking-normal">(opsional)</span>
               </p>
               <div className="grid grid-cols-2 gap-4">
-                {/* NIK / No KTP */}
                 <div>
                   <Label optional>NIK / No. KTP</Label>
-                  <input type="text" value={noKtp} onChange={e => setNoKtp(e.target.value)}
-                    placeholder="16 digit NIK" maxLength={16} className={inputCls(errors.no_ktp)} />
-                  {errors.no_ktp && <p className="text-red-400 text-xs mt-1">{errors.no_ktp}</p>}
+                  <input type="text" value={nik} onChange={e => setNik(e.target.value)}
+                    placeholder="16 digit NIK" maxLength={16} className={inputCls(errors.nik)} />
+                  {errors.nik && <p className="text-red-400 text-xs mt-1">{errors.nik}</p>}
                 </div>
-                {/* NPWP */}
                 <div>
                   <Label optional>NPWP</Label>
                   <input type="text" value={npwp} onChange={e => setNpwp(e.target.value)}
-                    placeholder="XX.XXX.XXX.X-XXX.XXX" className={inputCls()} />
+                    placeholder="15 digit NPWP" maxLength={15} className={inputCls(errors.npwp)} />
+                  {errors.npwp && <p className="text-red-400 text-xs mt-1">{errors.npwp}</p>}
                 </div>
               </div>
             </div>
@@ -267,6 +322,102 @@ export const UserModal: React.FC<UserModalProps> = ({
               className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
               {saving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               {mode === 'add' ? 'Buat Pengguna' : 'Simpan Perubahan'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ── ChangePasswordModal ───────────────────────────────────────────────────────
+
+interface ChangePasswordModalProps {
+  user:     ApiUser;
+  onClose:  () => void;
+  onSubmit: (dto: ChangePasswordDTO) => Promise<void>;
+  saving?:  boolean;
+}
+
+import { ChangePasswordDTO } from '@/src/domain/entities/User';
+
+export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
+  user, onClose, onSubmit, saving = false,
+}) => {
+  const [currentPassword,  setCurrentPassword]  = useState('');
+  const [newPassword,      setNewPassword]      = useState('');
+  const [confirmPassword,  setConfirmPassword]  = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+    const pwErr = validatePasswordStrength(newPassword);
+    if (pwErr) errs.newPassword = pwErr;
+    if (!confirmPassword)       errs.confirmPassword = 'Konfirmasi password wajib diisi';
+    else if (newPassword !== confirmPassword) errs.confirmPassword = 'Password tidak cocok';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    await onSubmit({
+      currentPassword: currentPassword || undefined,
+      newPassword,
+      confirmPassword,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-sm bg-slate-800 border border-slate-700/50 rounded-2xl shadow-2xl">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center">
+              <Icon name="lock" className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-white font-bold text-base">Ganti Password</h2>
+              <p className="text-slate-400 text-xs">{user.fullName}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all">
+            <Icon name="x" className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <div>
+            <Label optional>Password Saat Ini</Label>
+            <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
+              placeholder="••••••••" className={inputCls()} />
+          </div>
+          <div>
+            <Label>Password Baru</Label>
+            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+              placeholder="min. 8 karakter" className={inputCls(errors.newPassword)} />
+            {errors.newPassword
+              ? <p className="text-red-400 text-xs mt-1">{errors.newPassword}</p>
+              : <p className="text-slate-600 text-xs mt-1">Huruf besar, kecil, angka & simbol</p>
+            }
+          </div>
+          <div>
+            <Label>Konfirmasi Password Baru</Label>
+            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+              placeholder="ulangi password baru" className={inputCls(errors.confirmPassword)} />
+            {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-all">
+              Batal
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
+              {saving && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+              Simpan
             </button>
           </div>
         </form>
