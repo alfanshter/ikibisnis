@@ -6,9 +6,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/src/presentation/hooks/auth/useAuth';
 
 export default function LoginPage() {
-  const router = useRouter();
+  const router   = useRouter();
+  const { login } = useAuth();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
@@ -20,20 +22,25 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       setError('Email dan password wajib diisi.');
       return;
     }
 
     setLoading(true);
-    // Simulasi autentikasi — ganti dengan auth provider sesungguhnya
-    await new Promise(r => setTimeout(r, 1200));
+    const result = await login(email.trim(), password);
+    setLoading(false);
 
-    if (email === 'admin@nexus.id' && password === 'admin123') {
+    if (result.success) {
+      // Save token to cookie so middleware can read it (server-side)
+      const { getSession } = await import('@/src/presentation/hooks/auth/useAuth');
+      const session = getSession();
+      if (session) {
+        document.cookie = `nexus_token=${session.accessToken}; path=/; max-age=${session.expiresIn}; SameSite=Strict`;
+      }
       router.push('/');
     } else {
-      setLoading(false);
-      setError('Email atau password salah. Coba lagi.');
+      setError(result.message);
     }
   };
 
@@ -224,33 +231,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Demo hint */}
-          <div className="mt-6 bg-slate-800/40 border border-slate-700/40 rounded-xl p-4">
-            <p className="text-slate-500 text-xs mb-2 font-medium uppercase tracking-wide">Akun Demo</p>
-            <div className="space-y-1">
-              <div className="flex justify-between">
-                <span className="text-slate-400 text-xs">Email</span>
-                <button
-                  type="button"
-                  onClick={() => setEmail('admin@nexus.id')}
-                  className="text-blue-400 hover:text-blue-300 text-xs font-mono transition-colors"
-                >
-                  admin@nexus.id
-                </button>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400 text-xs">Password</span>
-                <button
-                  type="button"
-                  onClick={() => setPassword('admin123')}
-                  className="text-blue-400 hover:text-blue-300 text-xs font-mono transition-colors"
-                >
-                  admin123
-                </button>
-              </div>
-            </div>
-          </div>
 
           <p className="text-center text-slate-600 text-xs mt-8">
             © 2026 Nexus Admin · Versi 1.0.0
