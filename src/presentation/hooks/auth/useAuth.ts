@@ -122,7 +122,25 @@ export const useAuth = () => {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+    const token = getToken();
+
+    // Call backend to revoke the token (fire-and-forget — clear session regardless)
+    if (token) {
+      try {
+        await fetch(`${BACKEND}/api/v1/auth/logout`, {
+          method:  'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      } catch {
+        // ignore network errors — we still clear the local session
+      }
+    }
+
     clearSession();
     router.push('/login');
   }, [router]);
