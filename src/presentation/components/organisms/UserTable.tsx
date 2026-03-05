@@ -16,6 +16,8 @@ interface UserTableProps {
   onChangePassword: (user: ApiUser) => void;
   onPageChange:     (page: number) => void;
   loading?:         boolean;
+  canUpdate?:       boolean;
+  canDelete?:       boolean;
 }
 
 const TABLE_HEADERS = ['USER', 'ROLE', 'STATUS', 'CREATED', 'ACTIONS'];
@@ -27,7 +29,9 @@ export const UserTable: React.FC<UserTableProps> = ({
   onToggle,
   onChangePassword,
   onPageChange,
-  loading = false
+  loading = false,
+  canUpdate = true,
+  canDelete = true,
 }) => (
   <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
     <div className="overflow-x-auto">
@@ -71,6 +75,8 @@ export const UserTable: React.FC<UserTableProps> = ({
                 onDelete={onDelete}
                 onToggle={onToggle}
                 onChangePassword={onChangePassword}
+                canUpdate={canUpdate}
+                canDelete={canDelete}
               />
             ))
           )}

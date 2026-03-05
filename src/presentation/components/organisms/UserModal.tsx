@@ -10,6 +10,7 @@ import {
   ApiUser, Gender,
   CreateUserApiDTO, UpdateUserApiDTO,
 } from '@/src/domain/entities/User';
+import { apiFetch } from '@/src/infrastructure/api/apiFetch';
 import { Icon } from '../atoms/Icon';
 
 // ── Role option fetched from roles API ────────────────────────────────────
@@ -82,22 +83,19 @@ export const UserModal: React.FC<UserModalProps> = ({
   const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
   useEffect(() => {
-    const ctrl = new AbortController();
-    fetch(`${BACKEND}/api/v1/roles?limit=100`, { signal: ctrl.signal })
-      .then(r => r.json())
-      .then(json => {
-        // unwrap same double-wrap pattern
-        const outer = json?.data;
-        const inner = (outer && 'data' in outer) ? outer.data : outer;
-        const list: RoleOption[] = (inner?.data ?? []).map((r: { id: string; name: string; badgeColor: string }) => ({
+    let cancelled = false;
+    apiFetch<{ data: RoleOption[]; total: number }>(`${BACKEND}/api/v1/roles?limit=100`)
+      .then(result => {
+        if (cancelled) return;
+        const list: RoleOption[] = (result?.data ?? []).map(r => ({
           id: r.id, name: r.name, badgeColor: r.badgeColor,
         }));
         setRoles(list);
         if (!roleId && list.length > 0) setRoleId(list[0].id);
       })
       .catch(() => {/* silent */})
-      .finally(() => setRolesLoading(false));
-    return () => ctrl.abort();
+      .finally(() => { if (!cancelled) setRolesLoading(false); });
+    return () => { cancelled = true; };
   }, [BACKEND, roleId]);
 
   const validate = (): boolean => {

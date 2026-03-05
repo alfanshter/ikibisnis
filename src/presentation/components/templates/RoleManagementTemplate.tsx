@@ -24,6 +24,7 @@ import { ToastState } from '@/src/presentation/hooks/user/useRoleManagement';
 import { Sidebar }   from '../organisms/Sidebar';
 import { TopBar }    from '../organisms/TopBar';
 import { Icon }      from '../atoms/Icon';
+import { usePermission } from '@/src/presentation/hooks/auth/usePermission';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -553,9 +554,11 @@ interface RoleCardProps {
   onEdit:    (r: Role) => void;
   onDelete:  (r: Role) => void;
   onToggle:  (r: Role) => void;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
-const RoleCard: React.FC<RoleCardProps> = ({ role, selected, onSelect, onEdit, onDelete, onToggle }) => {
+const RoleCard: React.FC<RoleCardProps> = ({ role, selected, onSelect, onEdit, onDelete, onToggle, canUpdate = true, canDelete = true }) => {
   const permCount = role.permissions.reduce((s, p) => s + p.actions.length, 0);
 
   return (
@@ -594,24 +597,42 @@ const RoleCard: React.FC<RoleCardProps> = ({ role, selected, onSelect, onEdit, o
 
       {/* Actions — visible on hover */}
       <div className="flex gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-        <button
-          onClick={() => onEdit(role)}
-          className="flex-1 py-1 text-[11px] font-medium text-slate-400 hover:text-white bg-slate-700/40 hover:bg-slate-700 rounded-lg transition-all"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => onToggle(role)}
-          className="flex-1 py-1 text-[11px] font-medium text-slate-400 hover:text-amber-400 bg-slate-700/40 hover:bg-amber-500/10 rounded-lg transition-all"
-        >
-          {role.isActive ? 'Nonaktifkan' : 'Aktifkan'}
-        </button>
-        <button
-          onClick={() => onDelete(role)}
-          className="px-2 py-1 text-[11px] font-medium text-slate-400 hover:text-red-400 bg-slate-700/40 hover:bg-red-500/10 rounded-lg transition-all"
-        >
-          <Icon name="trash" className="w-3.5 h-3.5" />
-        </button>
+        {canUpdate ? (
+          <button
+            onClick={() => onEdit(role)}
+            className="flex-1 py-1 text-[11px] font-medium text-slate-400 hover:text-white bg-slate-700/40 hover:bg-slate-700 rounded-lg transition-all"
+          >
+            Edit
+          </button>
+        ) : (
+          <span className="flex-1 py-1 flex items-center justify-center text-slate-600 bg-slate-700/20 rounded-lg cursor-not-allowed" title="Tidak ada izin edit">
+            <Icon name="lock" className="w-3 h-3" />
+          </span>
+        )}
+        {canUpdate ? (
+          <button
+            onClick={() => onToggle(role)}
+            className="flex-1 py-1 text-[11px] font-medium text-slate-400 hover:text-amber-400 bg-slate-700/40 hover:bg-amber-500/10 rounded-lg transition-all"
+          >
+            {role.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+          </button>
+        ) : (
+          <span className="flex-1 py-1 flex items-center justify-center text-slate-600 bg-slate-700/20 rounded-lg cursor-not-allowed" title="Tidak ada izin ubah status">
+            <Icon name="lock" className="w-3 h-3" />
+          </span>
+        )}
+        {canDelete ? (
+          <button
+            onClick={() => onDelete(role)}
+            className="px-2 py-1 text-[11px] font-medium text-slate-400 hover:text-red-400 bg-slate-700/40 hover:bg-red-500/10 rounded-lg transition-all"
+          >
+            <Icon name="trash" className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          <span className="px-2 py-1 flex items-center justify-center text-slate-600 bg-slate-700/20 rounded-lg cursor-not-allowed" title="Tidak ada izin hapus">
+            <Icon name="lock" className="w-3 h-3" />
+          </span>
+        )}
       </div>
     </div>
   );
@@ -665,7 +686,7 @@ export const RoleManagementTemplate: React.FC<RoleManagementTemplateProps> = ({
   onSearch, onFilterActive, onRefresh,
 }) => {
   const [searchInput, setSearchInput] = useState('');
-
+  const { canWrite, canUpdate, canDelete } = usePermission('user_management_roles');
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(searchInput);
@@ -711,6 +732,7 @@ export const RoleManagementTemplate: React.FC<RoleManagementTemplateProps> = ({
             <Icon name="refresh" className="w-4 h-4" />
           </button>
 
+          {canWrite ? (
           <button
             onClick={onOpenCreateModal}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-xl transition-all ml-auto"
@@ -718,6 +740,12 @@ export const RoleManagementTemplate: React.FC<RoleManagementTemplateProps> = ({
             <Icon name="plus" className="w-4 h-4" />
             New Role
           </button>
+          ) : (
+          <span className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 text-slate-500 text-sm font-semibold rounded-xl ml-auto cursor-not-allowed border border-slate-700/50" title="Tidak ada izin tambah role">
+            <Icon name="lock" className="w-4 h-4" />
+            New Role
+          </span>
+          )}
         </div>
 
         {/* Two-panel layout */}
@@ -751,6 +779,8 @@ export const RoleManagementTemplate: React.FC<RoleManagementTemplateProps> = ({
                   onEdit={onOpenEditModal}
                   onDelete={onOpenDeleteConfirm}
                   onToggle={onToggleStatus}
+                  canUpdate={canUpdate}
+                  canDelete={canDelete}
                 />
               ))
             )}

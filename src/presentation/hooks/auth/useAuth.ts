@@ -7,6 +7,7 @@
 
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import type { RolePermission } from '@/src/domain/entities/Role';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface AuthUser {
@@ -18,13 +19,15 @@ export interface AuthUser {
   gender:      string;
   isActive:    boolean;
   lastLoginAt: string | null;
+  permissions: RolePermission[]; // returned by backend inside user object
 }
 
 export interface AuthSession {
-  accessToken: string;
-  expiresIn:   number;
-  expiresAt:   number;   // epoch ms — computed on save
-  user:        AuthUser;
+  accessToken:  string;
+  expiresIn:    number;
+  expiresAt:    number;         // epoch ms — computed on save
+  user:         AuthUser;
+  permissions:  RolePermission[]; // fetched from role after login
 }
 
 // ── Storage key ───────────────────────────────────────────────────────────────
@@ -37,8 +40,12 @@ export const getSession = (): AuthSession | null => {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const session: AuthSession = JSON.parse(raw);
-    // Auto-invalidate if expired
     if (Date.now() > session.expiresAt) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    // Evict stale sessions that pre-date the permissions field
+    if (!Array.isArray(session.permissions)) {
       localStorage.removeItem(SESSION_KEY);
       return null;
     }
@@ -77,7 +84,7 @@ export const useAuth = () => {
 
       const json = await res.json();
 
-      // Unwrap double-nested response (same pattern as other API calls)
+      // Unwrap double-nested response
       const outerData = json?.data;
       const innerData = (outerData && typeof outerData === 'object' && 'data' in outerData)
         ? outerData.data
@@ -90,18 +97,23 @@ export const useAuth = () => {
         return { success: false, message: msg };
       }
 
-      // innerData = { accessToken, expiresIn, user }
       const { accessToken, expiresIn, user } = innerData as {
         accessToken: string;
         expiresIn:   number;
         user:        AuthUser;
       };
 
+      // Permissions come directly from the login response inside user
+      const permissions: RolePermission[] = Array.isArray(user.permissions)
+        ? user.permissions
+        : [];
+
       saveSession({
         accessToken,
         expiresIn,
-        expiresAt: Date.now() + expiresIn * 1000,
+        expiresAt:   Date.now() + expiresIn * 1000,
         user,
+        permissions,
       });
 
       return { success: true };

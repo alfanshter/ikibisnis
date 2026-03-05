@@ -2,6 +2,7 @@
 
 import { useUserManagement } from '@/src/presentation/hooks/user/useUserManagement';
 import { UserManagementTemplate } from '@/src/presentation/components/templates/UserManagementTemplate';
+import { PermissionGuard } from '@/src/presentation/components/providers/PermissionGuard';
 
 export default function UsersPage() {
   const {
@@ -36,35 +37,37 @@ export default function UsersPage() {
   } = useUserManagement();
 
   return (
-    <UserManagementTemplate
-      collection={collection}
-      query={query}
-      toast={toast}
-      listLoading={listLoading}
-      saving={saving}
-      showCreateModal={showCreateModal}
-      showEditModal={showEditModal}
-      showDeleteConfirm={showDeleteConfirm}
-      showChangePasswordModal={showChangePasswordModal}
-      editingUser={editingUser}
-      deletingUser={deletingUser}
-      passwordUser={passwordUser}
-      onPageChange={handlePageChange}
-      onSearchChange={handleSearchChange}
-      onFilterChange={handleFilterChange}
-      onCreate={handleCreate}
-      onUpdate={handleUpdate}
-      onChangePassword={handleChangePassword}
-      onToggleStatus={handleToggleStatus}
-      onDelete={handleDelete}
-      openCreate={openCreate}
-      openEdit={openEdit}
-      openDeleteConfirm={openDeleteConfirm}
-      openChangePassword={openChangePassword}
-      closeCreate={closeCreate}
-      closeEdit={closeEdit}
-      closeDeleteConfirm={closeDeleteConfirm}
-      closeChangePassword={closeChangePassword}
-    />
+    <PermissionGuard feature="user_management_users">
+      <UserManagementTemplate
+        collection={collection}
+        query={query}
+        toast={toast}
+        listLoading={listLoading}
+        saving={saving}
+        showCreateModal={showCreateModal}
+        showEditModal={showEditModal}
+        showDeleteConfirm={showDeleteConfirm}
+        showChangePasswordModal={showChangePasswordModal}
+        editingUser={editingUser}
+        deletingUser={deletingUser}
+        passwordUser={passwordUser}
+        onPageChange={handlePageChange}
+        onSearchChange={handleSearchChange}
+        onFilterChange={handleFilterChange}
+        onCreate={handleCreate}
+        onUpdate={handleUpdate}
+        onChangePassword={handleChangePassword}
+        onToggleStatus={handleToggleStatus}
+        onDelete={handleDelete}
+        openCreate={openCreate}
+        openEdit={openEdit}
+        openDeleteConfirm={openDeleteConfirm}
+        openChangePassword={openChangePassword}
+        closeCreate={closeCreate}
+        closeEdit={closeEdit}
+        closeDeleteConfirm={closeDeleteConfirm}
+        closeChangePassword={closeChangePassword}
+      />
+    </PermissionGuard>
   );
 }

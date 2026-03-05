@@ -15,26 +15,11 @@ import {
   ChangePasswordDTO,
   GetUsersQuery,
 } from '@/src/domain/entities/User';
+import { apiFetch } from '@/src/infrastructure/api/apiFetch';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const BASE    = `${BACKEND}/api/v1/users`;
-
-// ── HTTP helper (same double-unwrap as useRoleManagement) ─────────────────
-async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const res  = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.message ?? 'API error');
-  const outer = json.data;
-  if (outer !== null && typeof outer === 'object' && 'success' in outer && 'data' in outer) {
-    if (!outer.success) throw new Error(outer.message ?? 'API error');
-    return outer.data as T;
-  }
-  return outer as T;
-}
 
 // ── Toast ─────────────────────────────────────────────────────────────────
 export interface ToastState { msg: string; type: 'success' | 'error' }

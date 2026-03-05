@@ -9,6 +9,7 @@ import { useDashboard } from '@/src/presentation/hooks/dashboard/useDashboard';
 import { DashboardTemplate } from '@/src/presentation/components/templates/DashboardTemplate';
 import { DashboardSkeleton } from '@/src/presentation/components/templates/DashboardSkeleton';
 import { ErrorTemplate } from '@/src/presentation/components/templates/ErrorTemplate';
+import { PermissionGuard } from '@/src/presentation/components/providers/PermissionGuard';
 
 export default function Home() {
   const { dashboard, loading, error, refresh } = useDashboard();
@@ -21,5 +22,9 @@ export default function Home() {
     return <ErrorTemplate message={error || 'Failed to load dashboard'} onRetry={refresh} />;
   }
 
-  return <DashboardTemplate dashboard={dashboard} />;
+  return (
+    <PermissionGuard feature="dashboard">
+      <DashboardTemplate dashboard={dashboard} />
+    </PermissionGuard>
+  );
 }

@@ -21,6 +21,7 @@ import { UserTable } from '../organisms/UserTable';
 import { UserModal, ChangePasswordModal } from '../organisms/UserModal';
 import { DeleteConfirmModal } from '../organisms/DeleteConfirmModal';
 import { Icon } from '../atoms/Icon';
+import { usePermission } from '@/src/presentation/hooks/auth/usePermission';
 
 interface UserManagementTemplateProps {
   /* Data */
@@ -93,7 +94,10 @@ export const UserManagementTemplate: React.FC<UserManagementTemplateProps> = ({
   closeEdit,
   closeDeleteConfirm,
   closeChangePassword,
-}) => (
+}) => {
+  const { canWrite, canUpdate, canDelete } = usePermission('user_management_users');
+
+  return (
   <div className="flex min-h-screen bg-slate-900">
     <Sidebar activePage="User Management" />
 
@@ -101,7 +105,7 @@ export const UserManagementTemplate: React.FC<UserManagementTemplateProps> = ({
       <TopBar
         title="Pengguna"
         subtitle="Daftar semua pengguna yang berwenang mengakses konsol ini."
-        action={
+        action={canWrite ? (
           <button
             onClick={openCreate}
             className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-blue-500/20"
@@ -109,7 +113,12 @@ export const UserManagementTemplate: React.FC<UserManagementTemplateProps> = ({
             <Icon name="plus" className="w-4 h-4" />
             Tambah Pengguna
           </button>
-        }
+        ) : (
+          <span className="flex items-center gap-2 px-5 py-2.5 bg-slate-700/50 text-slate-500 font-semibold text-sm rounded-xl cursor-not-allowed border border-slate-700/50" title="Tidak ada izin tambah pengguna">
+            <Icon name="lock" className="w-4 h-4" />
+            Tambah Pengguna
+          </span>
+        )}
       />
 
       {/* Search & Filter bar */}
@@ -158,6 +167,8 @@ export const UserManagementTemplate: React.FC<UserManagementTemplateProps> = ({
         onChangePassword={openChangePassword}
         onPageChange={onPageChange}
         loading={listLoading}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
       />
     </main>
 
@@ -224,4 +235,5 @@ export const UserManagementTemplate: React.FC<UserManagementTemplateProps> = ({
       />
     )}
   </div>
-);
+  );
+};

@@ -7,9 +7,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Icon } from '../atoms/Icon';
 import DIContainer from '@/src/infrastructure/di/container';
+import { useAuth, getSession } from '@/src/presentation/hooks/auth/useAuth';
+import { hasPermission } from '@/src/presentation/hooks/auth/usePermission';
 
 interface SidebarProps {
   activePage?: string;
@@ -25,33 +27,33 @@ const BurgerIcon: React.FC<{ open: boolean }> = ({ open }) => (
 );
 
 const FINANCE_CHILDREN = [
-  { name: 'Laporan Harian', icon: 'receipt',    href: '/finance/harian'   },
-  { name: 'Neraca',         icon: 'scale',      href: '/finance/neraca'   },
-  { name: 'Laba Rugi',      icon: 'chart-bar',  href: '/finance/laba-rugi'},
-  { name: 'Arus Kas',       icon: 'water',      href: '/finance/arus-kas' },
+  { name: 'Laporan Harian', icon: 'receipt',    href: '/finance/harian',    feature: 'laporan_harian'    },
+  { name: 'Neraca',         icon: 'scale',      href: '/finance/neraca',    feature: 'laporan_neraca'    },
+  { name: 'Laba Rugi',      icon: 'chart-bar',  href: '/finance/laba-rugi', feature: 'laporan_laba_rugi' },
+  { name: 'Arus Kas',       icon: 'water',      href: '/finance/arus-kas',  feature: 'laporan_arus_kas'  },
 ];
 
 const USER_CHILDREN = [
-  { name: 'Pengguna', icon: 'user',   href: '/users'       },
-  { name: 'Roles',    icon: 'shield', href: '/users/roles' },
+  { name: 'Pengguna', icon: 'user',   href: '/users',       feature: 'user_management_users' },
+  { name: 'Roles',    icon: 'shield', href: '/users/roles', feature: 'user_management_roles' },
 ];
 
 const PROJECT_CHILDREN = [
-  { name: 'Semua Proyek', icon: 'briefcase', href: '/projects'            },
-  { name: 'Penawaran',    icon: 'document',  href: '/projects/quotations' },
+  { name: 'Semua Proyek', icon: 'briefcase', href: '/projects',            feature: 'projects'  },
+  { name: 'Penawaran',    icon: 'document',  href: '/projects/quotations', feature: 'penawaran' },
 ];
 
 const MENU_ITEMS = [
-  { name: 'Dashboard',        icon: 'grid',      href: '/',         children: null             },
-  { name: 'User Management',  icon: 'users',     href: '/users',    children: USER_CHILDREN    },
-  { name: 'Projects',         icon: 'briefcase', href: '/projects', children: PROJECT_CHILDREN },
-  { name: 'Finance',          icon: 'credit',    href: '/finance',  children: FINANCE_CHILDREN },
-  { name: 'Settings',         icon: 'settings',  href: '/settings', children: null             },
+  { name: 'Dashboard',        icon: 'grid',      href: '/',         feature: 'dashboard' as string | null, children: null             },
+  { name: 'User Management',  icon: 'users',     href: '/users',    feature: null,                         children: USER_CHILDREN    },
+  { name: 'Projects',         icon: 'briefcase', href: '/projects', feature: null,                         children: PROJECT_CHILDREN },
+  { name: 'Finance',          icon: 'credit',    href: '/finance',  feature: null,                         children: FINANCE_CHILDREN },
+  { name: 'Settings',         icon: 'settings',  href: '/settings', feature: 'settings'   as string | null, children: null             },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
   const pathname = usePathname();
-  const router   = useRouter();
+  const { logout } = useAuth();
 
   const isFinanceActive  = pathname.startsWith('/finance');
   const isUsersActive    = pathname.startsWith('/users');
@@ -69,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
 
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
-    router.push('/login');
+    logout();
   };
 
   // Dynamic store identity from settings
@@ -77,8 +79,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
   const [storeTagline, setStoreTagline] = useState('MANAGEMENT SYSTEM');
   const [logoInitial,  setLogoInitial]  = useState('N');
   const [logoColor,    setLogoColor]    = useState('blue');
-  const [profileName,  setProfileName]  = useState('Alex Rivera');
-  const [profileRole,  setProfileRole]  = useState('Super Admin');
+
+  // Profile from session (real user) with settings fallback
+  const session = getSession();
+  const [profileName, setProfileName] = useState(session?.user.fullName ?? 'Admin');
+  const [profileRole, setProfileRole] = useState(session?.user.roleName ?? '');
+
+  // Permission-based visibility
+  const canSeeFeature = (feature: string) => hasPermission(feature as Parameters<typeof hasPermission>[0], 'read');
 
   const COLOR_MAP: Record<string, string> = {
     blue:    'bg-blue-500',
@@ -95,10 +103,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
       setStoreTagline(s.storeTagline);
       setLogoInitial(s.logoInitial);
       setLogoColor(s.logoColor);
-      setProfileName(p.name);
-      setProfileRole(p.role);
+      // Only overwrite profile from settings if session has no data
+      if (!session?.user.fullName) setProfileName(p.name);
+      if (!session?.user.roleName) setProfileRole(p.role);
     }).catch(() => { /* keep defaults */ });
-  }, []);
+  }, [session?.user.fullName, session?.user.roleName]);
 
   const isActive = (href: string, name: string): boolean => {
     if (activePage) return activePage === name;
@@ -163,6 +172,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {MENU_ITEMS.map((item) => {
             if (!item.children) {
+              // Single nav item — hide if no read permission
+              if (item.feature && !canSeeFeature(item.feature)) return null;
               return (
                 <Link
                   key={item.name}
@@ -179,6 +190,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
                 </Link>
               );
             }
+
+            // Parent with children — filter children by permission
+            const visibleChildren = item.children.filter(c => canSeeFeature(c.feature));
+            if (visibleChildren.length === 0) return null;
 
             const parentActive = isParentActive(item.href, item.name);
             const isOpen = !!openMenus[item.name];
@@ -202,7 +217,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
 
                 {isOpen && (
                   <div className="mt-1 ml-4 pl-3 border-l border-slate-700/50 space-y-0.5">
-                    {item.children.map(child => (
+                    {visibleChildren.map(child => (
                       <Link
                         key={child.name}
                         href={child.href}

@@ -13,42 +13,11 @@ import {
   UpdateRoleApiDTO,
   GetRolesQuery,
 } from '@/src/domain/entities/Role';
+import { apiFetch } from '@/src/infrastructure/api/apiFetch';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const BASE = `${BACKEND}/api/v1/roles`;
-
-// ── HTTP helpers ──────────────────────────────────────────────────────────────
-/**
- * The backend returns: { success, statusCode, message, data: T, ... }
- * Some backend routes double-wrap: { success, data: { success, data: T } }
- * We unwrap either one or two levels so callers always get T.
- */
-async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-  const json = await res.json();
-
-  // Outer envelope
-  if (!json.success) throw new Error(json.message ?? 'API error');
-
-  // Detect double-wrapping: if json.data is itself an ApiResponse envelope,
-  // unwrap one extra level to get the real payload.
-  const outer = json.data;
-  if (
-    outer !== null &&
-    typeof outer === 'object' &&
-    'success' in outer &&
-    'data' in outer
-  ) {
-    if (!outer.success) throw new Error(outer.message ?? 'API error');
-    return outer.data as T;
-  }
-
-  return outer as T;
-}
 
 // ── Toast type ─────────────────────────────────────────────────────────────
 export interface ToastState {
