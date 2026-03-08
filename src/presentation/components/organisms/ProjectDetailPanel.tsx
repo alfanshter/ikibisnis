@@ -4,13 +4,16 @@
  */
 'use client';
 import React from 'react';
-import { Project, ProjectStatus, formatCurrency } from '@/src/domain/entities/Project';
+import { Project, ProjectStatus, formatCurrency, calcOperationalCosts, calcMarketerFee } from '@/src/domain/entities/Project';
 import { CategoryBadge } from '../molecules/CategoryBadge';
 import { ProjectStatusBadge } from '../molecules/ProjectStatusBadge';
 import { PriorityBadge } from '../molecules/PriorityBadge';
 import { Icon } from '../atoms/Icon';
 
-const STATUSES: ProjectStatus[] = ['Baru', 'Proses', 'Selesai', 'Dibatalkan'];
+const STATUSES: ProjectStatus[] = ['Baru', 'Proses', 'Selesai', 'Dibayar', 'Dibatalkan'];
+
+const fmt = (d: Date | string) =>
+  new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
 interface Props {
   project: Project;
@@ -20,8 +23,7 @@ interface Props {
   onStatusChange: (status: ProjectStatus) => void;
 }
 
-export const ProjectDetailPanel: React.FC<Props> = ({ project, saving, onClose, onEdit, onStatusChange }) => (
-  <aside className="w-96 shrink-0 bg-slate-800/80 border-l border-slate-700/50 flex flex-col h-full overflow-y-auto">
+export const ProjectDetailPanel: React.FC<Props> = ({ project, saving, onClose, onEdit, onStatusChange }) => (  <aside className="w-96 shrink-0 bg-slate-800/80 border-l border-slate-700/50 flex flex-col h-full overflow-y-auto">
     {/* Header */}
     <div className="p-5 border-b border-slate-700/50 flex items-start justify-between gap-3">
       <div className="min-w-0">
@@ -53,15 +55,109 @@ export const ProjectDetailPanel: React.FC<Props> = ({ project, saving, onClose, 
         {project.client.institution && <Row label="Instansi" value={project.client.institution} />}
       </Section>
 
-      {/* Details */}
+      {/* Marketing Eksternal */}
+      {project.externalMarketer && (() => {
+        const mkt = project.externalMarketer!;
+        const fee = calcMarketerFee(project.totalValue, mkt);
+        return (
+          <Section title="Marketing Eksternal" icon="user">
+            <Row label="Nama"    value={mkt.name} />
+            {mkt.contact && <Row label="Kontak" value={mkt.contact} />}
+            <Row
+              label="Fee"
+              value={mkt.feeType === 'percent'
+                ? `${mkt.feePercent ?? 0}% = ${formatCurrency(fee)}`
+                : formatCurrency(fee)}
+            />
+            {mkt.notes && <Row label="Catatan" value={mkt.notes} />}
+            <p className="text-slate-600 text-xs pt-1">*tidak termasuk grand total</p>
+          </Section>
+        );
+      })()}
+
+      {/* Detail Proyek */}
       <Section title="Detail Proyek" icon="list">
-        <Row label="Ditugaskan" value={project.assignedTo} />
-        <Row label="Dibuat"     value={new Date(project.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} />
-        <Row label="Deadline"   value={new Date(project.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} />
-        {project.completedAt && <Row label="Selesai" value={new Date(project.completedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} />}
+        <Row label="Ditugaskan"   value={project.assignedTo} />
+        <Row label="Dibuat"       value={fmt(project.createdAt)} />
+        <Row label="Deadline"     value={fmt(project.deadline)} />
+        {project.completedAt && <Row label="Selesai"   value={fmt(project.completedAt)} />}
+        {project.poNumber    && <Row label="No. PO"    value={project.poNumber} />}
+        <Row label="Asal"         value={project.origin === 'quotation' ? `Dari Penawaran${project.quotationId ? ` (${project.quotationId})` : ''}` : 'Langsung (Direct)'} />
       </Section>
 
-      {/* Items */}
+      {/* Tipe Pembayaran */}
+      <Section title="Tipe Pembayaran" icon="credit">
+        <Row label="Tipe" value={project.billingType} />
+
+        {/* Sewa */}
+        {project.billingType === 'Sewa' && (
+          <>
+            {project.sewaStartDate && <Row label="Mulai Sewa"   value={fmt(project.sewaStartDate)} />}
+            {project.sewaEndDate   && <Row label="Berakhir"     value={fmt(project.sewaEndDate)} />}
+            {project.renewalMonths && <Row label="Perpanjangan" value={`${project.renewalMonths} bulan`} />}
+          </>
+        )}
+
+        {/* Reguler / Sewa — info bayar */}
+        {project.billingType !== 'Termin' && project.status === 'Dibayar' && (
+          <>
+            {project.paidAt        && <Row label="Tanggal Bayar"   value={fmt(project.paidAt)} />}
+            {project.paymentMethod && <Row label="Metode Pembayaran" value={project.paymentMethod} />}
+            {project.paymentNotes  && <Row label="Catatan Bayar"    value={project.paymentNotes} />}
+          </>
+        )}
+
+        {/* Termin */}
+        {project.billingType === 'Termin' && project.termins && project.termins.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {project.termins.map((t) => (
+              <div key={t.id} className="bg-slate-700/40 rounded-lg p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-300 text-xs font-semibold">{t.label}</span>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    t.status === 'Lunas'
+                      ? 'bg-emerald-500/15 text-emerald-400'
+                      : t.status === 'Jatuh Tempo'
+                      ? 'bg-red-500/15 text-red-400'
+                      : 'bg-slate-600/50 text-slate-400'
+                  }`}>{t.status}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500">Nominal</span>
+                  <span className="text-white font-medium">{formatCurrency(t.amount)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500">Jatuh Tempo</span>
+                  <span className="text-slate-300">{fmt(t.dueDate)}</span>
+                </div>
+                {t.paidAt && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Dibayar</span>
+                    <span className="text-emerald-400">{fmt(t.paidAt)}</span>
+                  </div>
+                )}
+                {t.paymentMethod && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Metode</span>
+                    <span className="text-slate-300">{t.paymentMethod}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+            {/* Ringkasan termin */}
+            <div className="flex justify-between items-center bg-slate-700/30 rounded-lg px-3 py-2 text-xs mt-1">
+              <span className="text-slate-400">Terbayar</span>
+              <span className="text-emerald-400 font-semibold">
+                {formatCurrency(project.termins.filter(t => t.status === 'Lunas').reduce((s, t) => s + t.amount, 0))}
+                {' / '}
+                <span className="text-slate-400">{formatCurrency(project.termins.reduce((s, t) => s + t.amount, 0))}</span>
+              </span>
+            </div>
+          </div>
+        )}
+      </Section>
+
+      {/* Item Pengadaan */}
       <Section title="Item Pengadaan" icon="package">
         <div className="space-y-2">
           {project.items.map((item, i) => (
@@ -76,10 +172,19 @@ export const ProjectDetailPanel: React.FC<Props> = ({ project, saving, onClose, 
             </div>
           ))}
         </div>
-        <div className="mt-3 pt-3 border-t border-slate-700/50 flex justify-between">
-          <span className="text-slate-400 text-sm">Total</span>
-          <span className="text-emerald-400 font-bold">{formatCurrency(project.totalValue)}</span>
+
+        {/* Subtotal + pajak & biaya */}
+        <div className="mt-3 pt-3 border-t border-slate-700/50 space-y-1.5">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-400">Subtotal</span>
+            <span className={`font-semibold ${project.additionalFees ? 'text-slate-300' : 'text-emerald-400 font-bold'}`}>
+              {formatCurrency(project.totalValue)}
+            </span>
+          </div>
+
+          <FeeBreakdown project={project} />
         </div>
+        <OperasionalBreakdown project={project} />
       </Section>
 
       {/* Notes */}
@@ -121,6 +226,82 @@ export const ProjectDetailPanel: React.FC<Props> = ({ project, saving, onClose, 
     </div>
   </aside>
 );
+
+/* ── Fee Breakdown sub-component (PPN + PPH → masuk Grand Total) ── */
+const FeeBreakdown: React.FC<{ project: Project }> = ({ project }) => {
+  const f = project.additionalFees;
+  if (!f) return null;
+  if (!f.ppnRate && !f.pphEnabled) return null;
+
+  const ppnAmt = f.ppnRate    ? (project.totalValue * f.ppnRate) / 100          : 0;
+  const pphAmt = f.pphEnabled ? (project.totalValue * (f.pphRate ?? 0.5)) / 100 : 0;
+
+  return (
+    <>
+      {f.ppnRate && (
+        <div className="flex justify-between text-xs text-amber-400/80">
+          <span>PPN {f.ppnRate}%</span>
+          <span>+ {formatCurrency(ppnAmt)}</span>
+        </div>
+      )}
+      {f.pphEnabled && (
+        <div className="flex justify-between text-xs text-amber-400/80">
+          <span>PPH {f.pphRate ?? 0.5}%</span>
+          <span>+ {formatCurrency(pphAmt)}</span>
+        </div>
+      )}
+      <div className="flex justify-between pt-1.5 border-t border-slate-700/40">
+        <span className="text-slate-300 text-sm font-semibold">Grand Total</span>
+        <span className="text-emerald-400 font-bold">{formatCurrency(project.grandTotal)}</span>
+      </div>
+    </>
+  );
+};
+
+/* ── Operational Costs sub-component (E-Materai, Materai, E-Sign, Admin → TIDAK masuk Grand Total) ── */
+const OperasionalBreakdown: React.FC<{ project: Project }> = ({ project }) => {
+  const f = project.additionalFees;
+  if (!f) return null;
+  const hasOps = f.eMateraiEnabled || f.materaiEnabled || f.eSignEnabled || f.adminFeeEnabled;
+  if (!hasOps) return null;
+
+  const total = calcOperationalCosts(f);
+
+  return (
+    <div className="mt-3 pt-3 border-t border-slate-700/40 space-y-1.5">
+      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Biaya Operasional</p>
+      {f.eMateraiEnabled && (
+        <div className="flex justify-between text-xs text-slate-400">
+          <span>E-Materai</span>
+          <span>{formatCurrency(f.eMateraiAmount ?? 10_000)}</span>
+        </div>
+      )}
+      {f.materaiEnabled && (
+        <div className="flex justify-between text-xs text-slate-400">
+          <span>Materai</span>
+          <span>{formatCurrency(f.materaiAmount ?? 10_000)}</span>
+        </div>
+      )}
+      {f.eSignEnabled && (
+        <div className="flex justify-between text-xs text-slate-400">
+          <span>E-Sign</span>
+          <span>{formatCurrency(f.eSignAmount ?? 0)}</span>
+        </div>
+      )}
+      {f.adminFeeEnabled && (
+        <div className="flex justify-between text-xs text-slate-400">
+          <span>Biaya Admin{f.adminFeePlatform ? ` (${f.adminFeePlatform})` : ''}</span>
+          <span>{formatCurrency(f.adminFeeAmount ?? 0)}</span>
+        </div>
+      )}
+      <div className="flex justify-between text-xs font-semibold pt-1.5 border-t border-slate-700/30">
+        <span className="text-orange-400/90">Total Operasional</span>
+        <span className="text-orange-400/90">{formatCurrency(total)}</span>
+      </div>
+      <p className="text-slate-600 text-xs pt-1">*tidak termasuk grand total</p>
+    </div>
+  );
+};
 
 /* ── Helpers ── */
 const Section: React.FC<{ title: string; icon: string; children: React.ReactNode }> = ({ title, icon, children }) => (

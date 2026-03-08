@@ -8,6 +8,7 @@ import { UserRepository }      from '@/src/infrastructure/repositories/UserRepos
 import { ProjectRepository }   from '@/src/infrastructure/repositories/ProjectRepository';
 import { QuotationRepository } from '@/src/infrastructure/repositories/QuotationRepository';
 import { FinanceRepository }   from '@/src/infrastructure/repositories/FinanceRepository';
+import { DebtRepository }      from '@/src/infrastructure/repositories/DebtRepository';
 import { SettingsRepository }  from '@/src/infrastructure/repositories/SettingsRepository';
 
 import { GetDashboardDataUseCase } from '@/src/application/use-cases/dashboard';
@@ -25,6 +26,7 @@ import {  GetProjectsUseCase,
   UpdateProjectUseCase,
   DeleteProjectUseCase,
   GetProjectStatsUseCase,
+  PayTerminUseCase,
 } from '@/src/application/use-cases/project';
 import {
   GetQuotationsUseCase,
@@ -46,6 +48,12 @@ import {
   CreateTransactionUseCase,
   DeleteTransactionUseCase,
 } from '@/src/application/use-cases/finance';
+import { GetDebts }        from '@/src/application/use-cases/finance/GetDebts';
+import { GetDebtSummary }  from '@/src/application/use-cases/finance/GetDebtSummary';
+import { CreateDebt }      from '@/src/application/use-cases/finance/CreateDebt';
+import { UpdateDebt }      from '@/src/application/use-cases/finance/UpdateDebt';
+import { PayDebt }         from '@/src/application/use-cases/finance/PayDebt';
+import { DeleteDebt }      from '@/src/application/use-cases/finance/DeleteDebt';
 import {
   GetSettingsUseCase,
   UpdateStoreUseCase,
@@ -76,6 +84,7 @@ class DIContainer {
   private updateProjectUseCase: UpdateProjectUseCase;
   private deleteProjectUseCase: DeleteProjectUseCase;
   private getProjectStatsUseCase: GetProjectStatsUseCase;
+  private payTerminUseCase: PayTerminUseCase;
   // Quotation use-cases
   private getQuotationsUseCase: GetQuotationsUseCase;
   private getQuotationByIdUseCase: GetQuotationByIdUseCase;
@@ -94,6 +103,15 @@ class DIContainer {
   private getCashFlowUseCase: GetCashFlowUseCase;
   private createTransactionUseCase: CreateTransactionUseCase;
   private deleteTransactionUseCase: DeleteTransactionUseCase;
+  // Debt
+  private debtRepository: DebtRepository;
+  private getDebtsUseCase: GetDebts;
+  private getDebtSummaryUseCase: GetDebtSummary;
+  private createDebtUseCase: CreateDebt;
+  private updateDebtUseCase: UpdateDebt;
+  private payDebtUseCase: PayDebt;
+  private deleteDebtUseCase: DeleteDebt;
+  //
   private getSettingsUseCase: GetSettingsUseCase;
   private updateStoreUseCase: UpdateStoreUseCase;
   private updateProfileUseCase: UpdateProfileUseCase;
@@ -121,6 +139,7 @@ class DIContainer {
     this.updateProjectUseCase = new UpdateProjectUseCase(this.projectRepository);
     this.deleteProjectUseCase = new DeleteProjectUseCase(this.projectRepository);
     this.getProjectStatsUseCase = new GetProjectStatsUseCase(this.projectRepository);
+    this.payTerminUseCase = new PayTerminUseCase(this.projectRepository);
     // Quotation
     this.getQuotationsUseCase     = new GetQuotationsUseCase(this.quotationRepository);
     this.getQuotationByIdUseCase  = new GetQuotationByIdUseCase(this.quotationRepository);
@@ -138,6 +157,14 @@ class DIContainer {
     this.getCashFlowUseCase = new GetCashFlowUseCase(this.financeRepository);
     this.createTransactionUseCase = new CreateTransactionUseCase(this.financeRepository);
     this.deleteTransactionUseCase = new DeleteTransactionUseCase(this.financeRepository);
+    // Debt
+    this.debtRepository       = new DebtRepository();
+    this.getDebtsUseCase      = new GetDebts(this.debtRepository);
+    this.getDebtSummaryUseCase = new GetDebtSummary(this.debtRepository);
+    this.createDebtUseCase    = new CreateDebt(this.debtRepository);
+    this.updateDebtUseCase    = new UpdateDebt(this.debtRepository);
+    this.payDebtUseCase       = new PayDebt(this.debtRepository);
+    this.deleteDebtUseCase    = new DeleteDebt(this.debtRepository);
     this.getSettingsUseCase       = new GetSettingsUseCase(this.settingsRepository);
     this.updateStoreUseCase       = new UpdateStoreUseCase(this.settingsRepository);
     this.updateProfileUseCase     = new UpdateProfileUseCase(this.settingsRepository);
@@ -192,6 +219,9 @@ class DIContainer {
   getGetProjectStatsUseCase(): GetProjectStatsUseCase {
     return this.getProjectStatsUseCase;
   }
+  getPayTerminUseCase(): PayTerminUseCase {
+    return this.payTerminUseCase;
+  }
   // ── Quotation ────────────────────────────────────────────────────────────
   getGetQuotationsUseCase(): GetQuotationsUseCase {
     return this.getQuotationsUseCase;
@@ -242,6 +272,14 @@ class DIContainer {
   getDeleteTransactionUseCase(): DeleteTransactionUseCase {
     return this.deleteTransactionUseCase;
   }
+  // ── Debt ─────────────────────────────────────────────────────────────────
+  getGetDebtsUseCase(): GetDebts { return this.getDebtsUseCase; }
+  getGetDebtSummaryUseCase(): GetDebtSummary { return this.getDebtSummaryUseCase; }
+  getCreateDebtUseCase(): CreateDebt { return this.createDebtUseCase; }
+  getUpdateDebtUseCase(): UpdateDebt { return this.updateDebtUseCase; }
+  getPayDebtUseCase(): PayDebt { return this.payDebtUseCase; }
+  getDeleteDebtUseCase(): DeleteDebt { return this.deleteDebtUseCase; }
+  // ─────────────────────────────────────────────────────────────────────────
   getGetSettingsUseCase(): GetSettingsUseCase {
     return this.getSettingsUseCase;
   }

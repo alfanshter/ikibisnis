@@ -9,8 +9,8 @@ export default function ProjectsPage() {
     collection, stats,
     tableLoading, modalSaving, deleting,
     showAddModal, editingProject, deletingProject,
-    statusFilter, categoryFilter, search,
-    handlePageChange, handleStatusFilter, handleCategoryFilter, handleSearch,
+    statusFilter, categoryFilter, billingTypeFilter, search,
+    handlePageChange, handleStatusFilter, handleCategoryFilter, handleBillingTypeFilter, handleSearch,
     handleAddProject, handleEditProject, handleDeleteProject, handleViewProject,
     handleModalClose, handleModalSubmit,
     handleDeleteConfirm, handleDeleteClose,
@@ -29,10 +29,12 @@ export default function ProjectsPage() {
         deletingProject={deletingProject}
         statusFilter={statusFilter}
         categoryFilter={categoryFilter}
+        billingTypeFilter={billingTypeFilter}
         search={search}
         onPageChange={handlePageChange}
         onStatusFilter={handleStatusFilter}
         onCategoryFilter={handleCategoryFilter}
+        onBillingTypeFilter={handleBillingTypeFilter}
         onSearch={handleSearch}
         onAddProject={handleAddProject}
         onEditProject={handleEditProject}

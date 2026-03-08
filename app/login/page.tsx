@@ -230,6 +230,14 @@ export default function LoginPage() {
                 </>
               )}
             </button>
+
+            {/* Demo hint */}
+            <div className="bg-slate-800/60 border border-slate-700/40 rounded-xl p-3 text-center">
+              <p className="text-slate-500 text-xs mb-1 font-semibold uppercase tracking-wider">Mode Demo</p>
+              <p className="text-slate-400 text-xs">
+                Email bebas · Password: <span className="font-mono text-blue-400 font-semibold">demo123</span>
+              </p>
+            </div>
           </form>
 
           <p className="text-center text-slate-600 text-xs mt-8">

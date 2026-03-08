@@ -36,15 +36,17 @@ export interface ProjectManagementTemplateProps {
   deletingProject: Project | null;
 
   /* Filters */
-  statusFilter:   string;
-  categoryFilter: string;
-  search:         string;
+  statusFilter:       string;
+  categoryFilter:     string;
+  billingTypeFilter:  string;
+  search:             string;
 
   /* Callbacks */
-  onPageChange:      (page: number)  => void;
-  onStatusFilter:    (v: string)     => void;
-  onCategoryFilter:  (v: string)     => void;
-  onSearch:          (v: string)     => void;
+  onPageChange:          (page: number)  => void;
+  onStatusFilter:        (v: string)     => void;
+  onCategoryFilter:      (v: string)     => void;
+  onBillingTypeFilter:   (v: string)     => void;
+  onSearch:              (v: string)     => void;
   onAddProject:      ()              => void;
   onEditProject:     (p: Project)    => void;
   onDeleteProject:   (p: Project)    => void;
@@ -59,8 +61,8 @@ export const ProjectManagementTemplate: React.FC<ProjectManagementTemplateProps>
   collection, stats,
   tableLoading, modalSaving, deleting,
   showAddModal, editingProject, deletingProject,
-  statusFilter, categoryFilter, search,
-  onPageChange, onStatusFilter, onCategoryFilter, onSearch,
+  statusFilter, categoryFilter, billingTypeFilter, search,
+  onPageChange, onStatusFilter, onCategoryFilter, onBillingTypeFilter, onSearch,
   onAddProject, onEditProject, onDeleteProject, onViewProject,
   onModalClose, onModalSubmit,
   onDeleteConfirm, onDeleteClose,
@@ -87,12 +89,13 @@ export const ProjectManagementTemplate: React.FC<ProjectManagementTemplateProps>
 
         {/* ── Stats Bar ── */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
             <ProjectStatsCard label="Total Proyek" value={stats.total}       icon="briefcase"    color="blue"    />
             <ProjectStatsCard label="Baru"          value={stats.baru}        icon="alert-circle" color="sky"     />
             <ProjectStatsCard label="Sedang Proses" value={stats.proses}      icon="clock"        color="amber"   />
-            <ProjectStatsCard label="Selesai"        value={stats.selesai}     icon="check-circle" color="emerald" />
-            <ProjectStatsCard label="Dibatalkan"     value={stats.dibatalkan}  icon="x"            color="red"     />
+            <ProjectStatsCard label="Selesai"       value={stats.selesai}     icon="check-circle" color="emerald" />
+            <ProjectStatsCard label="Dibayar"       value={stats.dibayar}     icon="credit"       color="teal"    />
+            <ProjectStatsCard label="Dibatalkan"    value={stats.dibatalkan}  icon="x"            color="red"     />
           </div>
         )}
       </div>
@@ -106,9 +109,11 @@ export const ProjectManagementTemplate: React.FC<ProjectManagementTemplateProps>
             loading={tableLoading}
             statusFilter={statusFilter}
             categoryFilter={categoryFilter}
+            billingTypeFilter={billingTypeFilter}
             search={search}
             onStatusChange={onStatusFilter}
             onCategoryChange={onCategoryFilter}
+            onBillingTypeChange={onBillingTypeFilter}
             onSearchChange={onSearch}
             onPageChange={onPageChange}
             onEdit={onEditProject}

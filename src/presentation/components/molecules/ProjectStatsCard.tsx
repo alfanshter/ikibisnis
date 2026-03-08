@@ -10,7 +10,7 @@ interface Props {
   label: string;
   value: string | number;
   icon: string;
-  color: 'blue' | 'amber' | 'emerald' | 'sky' | 'red' | 'purple';
+  color: 'blue' | 'amber' | 'emerald' | 'sky' | 'red' | 'purple' | 'teal';
   sub?: string;
 }
 
@@ -21,6 +21,7 @@ const COLOR_MAP = {
   sky:     { bg: 'bg-sky-500/10',     icon: 'text-sky-400',     value: 'text-sky-300'     },
   red:     { bg: 'bg-red-500/10',     icon: 'text-red-400',     value: 'text-red-300'     },
   purple:  { bg: 'bg-purple-500/10',  icon: 'text-purple-400',  value: 'text-purple-300'  },
+  teal:    { bg: 'bg-teal-500/10',    icon: 'text-teal-400',    value: 'text-teal-300'    },
 };
 
 export const ProjectStatsCard: React.FC<Props> = ({ label, value, icon, color, sub }) => {

@@ -9,7 +9,7 @@ import { ProjectTableRow } from '../molecules/ProjectTableRow';
 import { Pagination } from '../molecules/Pagination';
 import { Icon } from '../atoms/Icon';
 
-const STATUSES: (ProjectStatus | 'Semua')[] = ['Semua', 'Baru', 'Proses', 'Selesai', 'Dibatalkan'];
+const STATUSES: (ProjectStatus | 'Semua')[] = ['Semua', 'Baru', 'Proses', 'Selesai', 'Dibayar', 'Dibatalkan'];
 const CATEGORIES: (ProjectCategory | 'Semua')[] = [
   'Semua',
   'Pengadaan Barang',
@@ -20,16 +20,26 @@ const CATEGORIES: (ProjectCategory | 'Semua')[] = [
   'Lainnya',
 ];
 
+type BillingTab = 'Semua' | 'Reguler' | 'Termin' | 'Sewa';
+const BILLING_TABS: { key: BillingTab; label: string; icon: string; color: string }[] = [
+  { key: 'Semua',   label: 'Semua',         icon: '📋', color: 'text-slate-300 border-slate-400'   },
+  { key: 'Reguler', label: 'Langsung Bayar', icon: '💳', color: 'text-slate-300 border-slate-400'   },
+  { key: 'Termin',  label: 'Termin',         icon: '⚡', color: 'text-purple-300 border-purple-400' },
+  { key: 'Sewa',    label: 'Sewa',           icon: '🔄', color: 'text-blue-300 border-blue-400'     },
+];
+
 interface Props {
-  collection:     ProjectCollection;
-  loading:        boolean;
-  statusFilter:   string;
-  categoryFilter: string;
-  search:         string;
-  onStatusChange:   (v: string) => void;
-  onCategoryChange: (v: string) => void;
-  onSearchChange:   (v: string) => void;
-  onPageChange:     (p: number) => void;
+  collection:         ProjectCollection;
+  loading:            boolean;
+  statusFilter:       string;
+  categoryFilter:     string;
+  billingTypeFilter:  string;
+  search:             string;
+  onStatusChange:        (v: string) => void;
+  onCategoryChange:      (v: string) => void;
+  onBillingTypeChange:   (v: string) => void;
+  onSearchChange:        (v: string) => void;
+  onPageChange:          (p: number) => void;
   onEdit:   (p: Project) => void;
   onDelete: (p: Project) => void;
   onView:   (p: Project) => void;
@@ -39,11 +49,39 @@ const SKELETON = Array.from({ length: 5 });
 
 export const ProjectTable: React.FC<Props> = ({
   collection, loading,
-  statusFilter, categoryFilter, search,
-  onStatusChange, onCategoryChange, onSearchChange,
+  statusFilter, categoryFilter, billingTypeFilter, search,
+  onStatusChange, onCategoryChange, onBillingTypeChange, onSearchChange,
   onPageChange, onEdit, onDelete, onView,
 }) => (
   <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 flex flex-col">
+    {/* ── Billing Type Tabs ── */}
+    <div className="px-5 pt-5 border-b border-slate-700/50">
+      <div className="flex gap-1 overflow-x-auto pb-0">
+        {BILLING_TABS.map(tab => {
+          const active = billingTypeFilter === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => onBillingTypeChange(tab.key)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all -mb-px ${
+                active
+                  ? tab.key === 'Termin'
+                    ? 'border-purple-400 text-purple-300'
+                    : tab.key === 'Sewa'
+                    ? 'border-blue-400 text-blue-300'
+                    : 'border-white text-white'
+                  : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+
     {/* ── Toolbar ── */}
     <div className="p-5 border-b border-slate-700/50 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* Search */}
@@ -149,12 +187,10 @@ export const ProjectTable: React.FC<Props> = ({
     {!loading && collection.projects.length > 0 && (
       <div className="p-4 border-t border-slate-700/50">
         <Pagination
-          pagination={{
-            currentPage:  collection.pagination.currentPage,
-            totalPages:   collection.pagination.totalPages,
-            totalUsers:   collection.pagination.totalProjects,
-            perPage:      collection.pagination.perPage,
-          }}
+          page={collection.pagination.currentPage}
+          totalPages={collection.pagination.totalPages}
+          total={collection.pagination.totalProjects}
+          limit={collection.pagination.perPage}
           onPageChange={onPageChange}
         />
       </div>

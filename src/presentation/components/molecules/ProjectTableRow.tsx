@@ -35,6 +35,15 @@ export const ProjectTableRow: React.FC<Props> = ({ project, onEdit, onDelete, on
           <p className="text-xs text-slate-500 font-mono mb-0.5">{project.id}</p>
           <p className="text-white font-medium text-sm leading-snug truncate">{project.title}</p>
           <p className="text-slate-500 text-xs truncate">{project.description}</p>
+          {project.billingType && project.billingType !== 'Reguler' && (
+            <span className={`inline-flex items-center mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold leading-none ${
+              project.billingType === 'Termin'
+                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+            }`}>
+              {project.billingType === 'Termin' ? '⚡ Termin' : '🔄 Sewa'}
+            </span>
+          )}
         </div>
       </td>
 

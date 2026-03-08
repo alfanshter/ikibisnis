@@ -27,10 +27,11 @@ const BurgerIcon: React.FC<{ open: boolean }> = ({ open }) => (
 );
 
 const FINANCE_CHILDREN = [
-  { name: 'Laporan Harian', icon: 'receipt',    href: '/finance/harian',    feature: 'laporan_harian'    },
-  { name: 'Neraca',         icon: 'scale',      href: '/finance/neraca',    feature: 'laporan_neraca'    },
-  { name: 'Laba Rugi',      icon: 'chart-bar',  href: '/finance/laba-rugi', feature: 'laporan_laba_rugi' },
-  { name: 'Arus Kas',       icon: 'water',      href: '/finance/arus-kas',  feature: 'laporan_arus_kas'  },
+  { name: 'Laporan Harian',   icon: 'receipt',   href: '/finance/harian',         feature: 'laporan_harian'    },
+  { name: 'Neraca',           icon: 'scale',     href: '/finance/neraca',         feature: 'laporan_neraca'    },
+  { name: 'Laba Rugi',        icon: 'chart-bar', href: '/finance/laba-rugi',      feature: 'laporan_laba_rugi' },
+  { name: 'Arus Kas',         icon: 'water',     href: '/finance/arus-kas',       feature: 'laporan_arus_kas'  },
+  { name: 'Hutang & Piutang', icon: 'credit',    href: '/finance/hutang-piutang', feature: 'hutang_piutang'    },
 ];
 
 const USER_CHILDREN = [

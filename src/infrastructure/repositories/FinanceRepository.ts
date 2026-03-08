@@ -40,6 +40,13 @@ let txStore: Transaction[] = [
 
 let nextTxId = txStore.length + 1;
 
+/**
+ * Shared mutable refs — used by ProjectRepository to auto-create a
+ * Pemasukan transaction when a project status changes to 'Dibayar'.
+ */
+export const txStoreRef   = { get value() { return txStore; },   set value(v: Transaction[]) { txStore   = v; } };
+export const nextTxIdRef  = { get value() { return nextTxId; },  set value(v: number)        { nextTxId  = v; } };
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function groupByDate(txs: Transaction[]): Map<string, Transaction[]> {

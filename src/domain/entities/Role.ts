@@ -20,6 +20,7 @@ export const SYSTEM_FEATURES = [
   'laporan_neraca',
   'laporan_laba_rugi',
   'laporan_arus_kas',
+  'hutang_piutang',
   'settings',
 ] as const;
 
@@ -35,6 +36,7 @@ export const FEATURE_LABELS: Record<SystemFeature, string> = {
   laporan_neraca:          'Laporan Neraca',
   laporan_laba_rugi:       'Laporan Laba Rugi',
   laporan_arus_kas:        'Laporan Arus Kas',
+  hutang_piutang:          'Hutang & Piutang',
   settings:                'Settings',
 };
 
@@ -42,7 +44,7 @@ export const FEATURE_GROUPS: { group: string; features: SystemFeature[] }[] = [
   { group: 'General',      features: ['dashboard'] },
   { group: 'User Mgmt',   features: ['user_management_roles', 'user_management_users'] },
   { group: 'Operations',  features: ['projects', 'penawaran'] },
-  { group: 'Laporan',     features: ['laporan_harian', 'laporan_neraca', 'laporan_laba_rugi', 'laporan_arus_kas'] },
+  { group: 'Laporan',     features: ['laporan_harian', 'laporan_neraca', 'laporan_laba_rugi', 'laporan_arus_kas', 'hutang_piutang'] },
   { group: 'System',      features: ['settings'] },
 ];
 

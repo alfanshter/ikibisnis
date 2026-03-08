@@ -8,7 +8,8 @@ import {
   ProjectCollection,
   ProjectStats,
   CreateProjectDTO,
-  UpdateProjectDTO
+  UpdateProjectDTO,
+  PayTerminDTO,
 } from '../entities/Project';
 
 export interface IProjectRepository {
@@ -18,7 +19,8 @@ export interface IProjectRepository {
     perPage: number,
     statusFilter?: string,
     categoryFilter?: string,
-    search?: string
+    search?: string,
+    billingTypeFilter?: string,
   ): Promise<ProjectCollection>;
 
   getProjectById(id: string): Promise<Project | null>;
@@ -27,4 +29,10 @@ export interface IProjectRepository {
   createProject(dto: CreateProjectDTO): Promise<Project>;
   updateProject(dto: UpdateProjectDTO): Promise<Project>;
   deleteProject(id: string): Promise<void>;
+
+  /**
+   * Mark a single termin as paid, auto-create a finance transaction.
+   * Only valid for projects with billingType === 'Termin'.
+   */
+  payTermin(dto: PayTerminDTO): Promise<Project>;
 }

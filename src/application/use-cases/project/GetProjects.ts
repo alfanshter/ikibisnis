@@ -13,7 +13,8 @@ export class GetProjectsUseCase {
     statusFilter?: string,
     categoryFilter?: string,
     search?: string,
+    billingTypeFilter?: string,
   ): Promise<ProjectCollection> {
-    return this.repo.getProjects(page, perPage, statusFilter, categoryFilter, search);
+    return this.repo.getProjects(page, perPage, statusFilter, categoryFilter, search, billingTypeFilter);
   }
 }

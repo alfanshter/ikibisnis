@@ -38,18 +38,19 @@ export const useProjectManagement = () => {
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
 
   /* ── Filters ── */
-  const [page,           setPage]           = useState(1);
-  const [statusFilter,   setStatusFilter]   = useState('Semua');
-  const [categoryFilter, setCategoryFilter] = useState('Semua');
-  const [search,         setSearch]         = useState('');
+  const [page,               setPage]               = useState(1);
+  const [statusFilter,       setStatusFilter]       = useState('Semua');
+  const [categoryFilter,     setCategoryFilter]     = useState('Semua');
+  const [billingTypeFilter,  setBillingTypeFilter]  = useState('Semua');
+  const [search,             setSearch]             = useState('');
 
   const container = DIContainer.getInstance();
 
   /* ── Load projects ── */
-  const loadProjects = useCallback(async (p: number, sf: string, cf: string, q: string) => {
+  const loadProjects = useCallback(async (p: number, sf: string, cf: string, q: string, bf: string) => {
     try {
       setTableLoading(true);
-      const data = await container.getGetProjectsUseCase().execute(p, 6, sf, cf, q);
+      const data = await container.getGetProjectsUseCase().execute(p, 6, sf, cf, q, bf);
       setCollection(data);
     } catch (err) {
       console.error('Failed to load projects:', err);
@@ -67,14 +68,15 @@ export const useProjectManagement = () => {
     }
   }, [container]);
 
-  useEffect(() => { loadProjects(page, statusFilter, categoryFilter, search); }, [page, statusFilter, categoryFilter, search, loadProjects]);
+  useEffect(() => { loadProjects(page, statusFilter, categoryFilter, search, billingTypeFilter); }, [page, statusFilter, categoryFilter, search, billingTypeFilter, loadProjects]);
   useEffect(() => { loadStats(); }, [loadStats]);
 
   /* ── Filters + Pagination ── */
-  const handlePageChange     = (p: number) => setPage(p);
-  const handleStatusFilter   = (v: string) => { setStatusFilter(v);   setPage(1); };
-  const handleCategoryFilter = (v: string) => { setCategoryFilter(v); setPage(1); };
-  const handleSearch         = (v: string) => { setSearch(v);         setPage(1); };
+  const handlePageChange         = (p: number) => setPage(p);
+  const handleStatusFilter       = (v: string) => { setStatusFilter(v);      setPage(1); };
+  const handleCategoryFilter     = (v: string) => { setCategoryFilter(v);    setPage(1); };
+  const handleBillingTypeFilter  = (v: string) => { setBillingTypeFilter(v); setPage(1); };
+  const handleSearch             = (v: string) => { setSearch(v);            setPage(1); };
 
   /* ── Add / Edit ── */
   const handleAddProject  = () => { setEditingProject(null); setShowAddModal(true); };
@@ -90,7 +92,7 @@ export const useProjectManagement = () => {
         await container.getUpdateProjectUseCase().execute(dto as UpdateProjectDTO);
       }
       handleModalClose();
-      await Promise.all([loadProjects(page, statusFilter, categoryFilter, search), loadStats()]);
+      await Promise.all([loadProjects(page, statusFilter, categoryFilter, search, billingTypeFilter), loadStats()]);
     } catch (err) {
       console.error('Failed to save project:', err);
     } finally {
@@ -110,7 +112,7 @@ export const useProjectManagement = () => {
       setDeletingProject(null);
       const newPage = collection.projects.length === 1 && page > 1 ? page - 1 : page;
       setPage(newPage);
-      await Promise.all([loadProjects(newPage, statusFilter, categoryFilter, search), loadStats()]);
+      await Promise.all([loadProjects(newPage, statusFilter, categoryFilter, search, billingTypeFilter), loadStats()]);
     } catch (err) {
       console.error('Failed to delete project:', err);
     } finally {
@@ -125,8 +127,8 @@ export const useProjectManagement = () => {
     collection, stats,
     tableLoading, modalSaving, deleting,
     showAddModal, editingProject, deletingProject,
-    statusFilter, categoryFilter, search,
-    handlePageChange, handleStatusFilter, handleCategoryFilter, handleSearch,
+    statusFilter, categoryFilter, billingTypeFilter, search,
+    handlePageChange, handleStatusFilter, handleCategoryFilter, handleBillingTypeFilter, handleSearch,
     handleAddProject, handleEditProject, handleDeleteProject, handleViewProject,
     handleModalClose, handleModalSubmit,
     handleDeleteConfirm, handleDeleteClose,
