@@ -3,7 +3,7 @@
  * Add / Edit project form modal.
  */
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Project,
   ProjectCategory,
@@ -23,13 +23,17 @@ import {
   formatCurrency,
 } from '@/src/domain/entities/Project';
 import { Icon } from '../atoms/Icon';
+import { apiFetch } from '@/src/infrastructure/api/apiFetch';
+
+const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 const CATEGORIES: ProjectCategory[] = [
   'Pengadaan Barang', 'Pengadaan Jasa', 'Pengadaan ATK',
   'Pengadaan Komputer', 'Pengadaan Furniture', 'Lainnya',
 ];
 const PRIORITIES: ProjectPriority[] = ['Rendah', 'Sedang', 'Tinggi'];
-const USERS = ['Alex Rivera', 'Sarah Chen', 'James Wilson', 'Maria Garcia', 'David Kim', 'Lisa Park', 'Tom Brown', 'Nina Patel'];
+
+interface UserOption { id: string; fullName: string; }
 
 const EMPTY_ITEM: ProjectItem = { name: '', quantity: 1, unit: 'pcs', unitPrice: 0 };
 
@@ -62,7 +66,25 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
   const [clientName,   setClientName]  = useState(project?.client.name  ?? '');
   const [clientContact,setClientContact] = useState(project?.client.contact ?? '');
   const [institution,  setInstitution] = useState(project?.client.institution ?? '');
-  const [assignedTo,   setAssignedTo]  = useState(project?.assignedTo   ?? USERS[0]);
+
+  // ── Users from API ────────────────────────────────────────────────────────
+  const [users,            setUsers]            = useState<UserOption[]>([]);
+  const [assignedToUserId, setAssignedToUserId] = useState<string>(project?.assignedTo ?? '');
+
+  useEffect(() => {
+    apiFetch<{ data: UserOption[]; total: number }>(
+      `${BACKEND}/api/v1/users?limit=100&isActive=true`
+    ).then(res => {
+      const list = res.data ?? [];
+      setUsers(list);
+      // Pre-select first user if nothing is set yet
+      if (!assignedToUserId && list.length > 0) {
+        setAssignedToUserId(list[0].id);
+      }
+    }).catch(() => { /* silently ignore — won't break form */ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [deadline,     setDeadline]    = useState(
     project?.deadline
       ? new Date(project.deadline).toISOString().split('T')[0]
@@ -203,7 +225,8 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
     const baseFields = {
       title, description, category, priority,
       client: { name: clientName, contact: clientContact, institution: institution || undefined },
-      items, assignedTo, deadline: new Date(deadline), notes: notes || undefined,
+      items, assignedTo: assignedToUserId, deadline: new Date(deadline), notes: notes || undefined,
+      assignedToUserId,
       poNumber: poNumber.trim() || undefined,
       billingType,
       ...(billingType === 'Termin' ? {
@@ -303,8 +326,13 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
               </div>
               <div>
                 <label className="block text-slate-300 text-sm mb-1.5">Ditugaskan ke</label>
-                <select className={inputCls()} value={assignedTo} onChange={e => setAssignedTo(e.target.value)}>
-                  {USERS.map(u => <option key={u} value={u}>{u}</option>)}
+                <select className={inputCls()} value={assignedToUserId} onChange={e => setAssignedToUserId(e.target.value)}>
+                  {users.length === 0 && (
+                    <option value="" disabled>Memuat pengguna…</option>
+                  )}
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>{u.fullName}</option>
+                  ))}
                 </select>
               </div>
               <div>

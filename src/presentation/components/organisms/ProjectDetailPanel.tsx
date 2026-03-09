@@ -10,7 +10,7 @@ import { ProjectStatusBadge } from '../molecules/ProjectStatusBadge';
 import { PriorityBadge } from '../molecules/PriorityBadge';
 import { Icon } from '../atoms/Icon';
 
-const STATUSES: ProjectStatus[] = ['Baru', 'Proses', 'Selesai', 'Dibayar', 'Dibatalkan'];
+const STATUSES: ProjectStatus[] = ['Baru', 'Pending', 'Proses', 'Selesai', 'Dibayar', 'Dibatalkan'];
 
 const fmt = (d: Date | string) =>
   new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });

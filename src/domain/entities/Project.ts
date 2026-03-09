@@ -23,6 +23,7 @@ export type ProjectCategory =
 
 export type ProjectStatus =
   | 'Baru'          // Newly received, not yet started
+  | 'Pending'       // Waiting for approval / confirmation from client
   | 'Proses'        // In progress
   | 'Selesai'       // Work done, awaiting payment
   | 'Dibayar'       // Payment received → auto-creates finance transaction
@@ -214,6 +215,8 @@ export interface CreateProjectDTO {
   client: ProjectClient;
   items: ProjectItem[];
   assignedTo: string;
+  /** UUID of the user this project is assigned to (used when sending to backend). */
+  assignedToUserId?: string;
   deadline: Date;
   notes?: string;
   /** Default: 'direct'. Set 'quotation' jika dibuat dari konversi penawaran. */
@@ -285,6 +288,7 @@ export interface ProjectPagination {
 export interface ProjectStats {
   total: number;
   baru: number;
+  pending: number;
   proses: number;
   selesai: number;
   dibayar: number;

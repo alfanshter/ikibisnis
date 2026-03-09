@@ -14,10 +14,11 @@ import { CategoryBadge } from '../molecules/CategoryBadge';
 import { ProjectStatusBadge } from '../molecules/ProjectStatusBadge';
 import { PriorityBadge } from '../molecules/PriorityBadge';
 
-const STATUSES: ProjectStatus[] = ['Baru', 'Proses', 'Selesai', 'Dibayar', 'Dibatalkan'];
+const STATUSES: ProjectStatus[] = ['Baru', 'Pending', 'Proses', 'Selesai', 'Dibayar', 'Dibatalkan'];
 
 const STATUS_COLOR: Record<ProjectStatus, string> = {
   Baru:       'bg-sky-500/10    border-sky-500/40    text-sky-300',
+  Pending:    'bg-orange-500/10 border-orange-500/40 text-orange-300',
   Proses:     'bg-amber-500/10  border-amber-500/40  text-amber-300',
   Selesai:    'bg-emerald-500/10 border-emerald-500/40 text-emerald-300',
   Dibayar:    'bg-teal-500/10   border-teal-500/40   text-teal-300',

@@ -9,7 +9,7 @@ import { ProjectTableRow } from '../molecules/ProjectTableRow';
 import { Pagination } from '../molecules/Pagination';
 import { Icon } from '../atoms/Icon';
 
-const STATUSES: (ProjectStatus | 'Semua')[] = ['Semua', 'Baru', 'Proses', 'Selesai', 'Dibayar', 'Dibatalkan'];
+const STATUSES: (ProjectStatus | 'Semua')[] = ['Semua', 'Baru', 'Pending', 'Proses', 'Selesai', 'Dibayar', 'Dibatalkan'];
 const CATEGORIES: (ProjectCategory | 'Semua')[] = [
   'Semua',
   'Pengadaan Barang',

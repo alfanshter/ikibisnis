@@ -416,6 +416,7 @@ export class ProjectRepository implements IProjectRepository {
     return {
       total:       all.length,
       baru:        all.filter(p => p.status === 'Baru').length,
+      pending:     all.filter(p => p.status === 'Pending').length,
       proses:      all.filter(p => p.status === 'Proses').length,
       selesai:     all.filter(p => p.status === 'Selesai').length,
       dibayar:     all.filter(p => p.status === 'Dibayar').length,

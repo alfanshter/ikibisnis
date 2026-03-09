@@ -3,10 +3,11 @@
  * Centralized place for managing dependencies
  */
 
-import { DashboardRepository } from '@/src/infrastructure/repositories/DashboardRepository';
-import { UserRepository }      from '@/src/infrastructure/repositories/UserRepository';
-import { ProjectRepository }   from '@/src/infrastructure/repositories/ProjectRepository';
-import { QuotationRepository } from '@/src/infrastructure/repositories/QuotationRepository';
+import { DashboardRepository }    from '@/src/infrastructure/repositories/DashboardRepository';
+import { UserRepository }         from '@/src/infrastructure/repositories/UserRepository';
+import { ApiProjectRepository }   from '@/src/infrastructure/repositories/ApiProjectRepository';
+import { IProjectRepository }     from '@/src/domain/repositories/IProjectRepository';
+import { QuotationRepository }    from '@/src/infrastructure/repositories/QuotationRepository';
 import { FinanceRepository }   from '@/src/infrastructure/repositories/FinanceRepository';
 import { DebtRepository }      from '@/src/infrastructure/repositories/DebtRepository';
 import { SettingsRepository }  from '@/src/infrastructure/repositories/SettingsRepository';
@@ -66,7 +67,7 @@ class DIContainer {
   private static instance: DIContainer;
   private dashboardRepository: DashboardRepository;
   private userRepository: UserRepository;
-  private projectRepository: ProjectRepository;
+  private projectRepository: IProjectRepository;
   private quotationRepository: QuotationRepository;
   private financeRepository: FinanceRepository;
   private settingsRepository: SettingsRepository;
@@ -121,7 +122,7 @@ class DIContainer {
   private constructor() {
     this.dashboardRepository = new DashboardRepository();
     this.userRepository = new UserRepository();
-    this.projectRepository = new ProjectRepository();
+    this.projectRepository = new ApiProjectRepository();
     this.quotationRepository = new QuotationRepository();
     this.financeRepository = new FinanceRepository();
     this.settingsRepository = new SettingsRepository();
