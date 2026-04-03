@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexus Admin - Management System",
+  title: "IKIBISNIS - Management System",
   description: "Professional admin dashboard with clean architecture",
 };
 
