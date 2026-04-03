@@ -1,5 +1,5 @@
 /**
- * Page: /login
+ * Page: /login2
  * Halaman login modern dengan desain dark-mode.
  */
 'use client';
