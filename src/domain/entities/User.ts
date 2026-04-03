@@ -99,6 +99,22 @@ export interface ApiResponse<T = unknown> {
   path:       string;
 }
 
+// ── Role Permissions ──────────────────────────────────────────────────────
+
+export type PermissionAction = 'read' | 'write' | 'delete';
+
+export interface ModulePermission {
+  module:      string;
+  label?:      string;
+  icon?:       string;
+  permissions: Record<PermissionAction, boolean>;
+}
+
+export interface RolePermissions {
+  role:    UserRole;
+  modules: ModulePermission[];
+}
+
 // ── Legacy types — kept only to avoid breaking untouched molecules ─────────
 
 export type UserRole     = 'Admin' | 'Manager' | 'Staff';

@@ -328,22 +328,24 @@ export class QuotationRepository implements IQuotationRepository {
     // Buat project baru dari data penawaran
     const projectId = `PRJ-${String(nextProjectIdRef.value++).padStart(3, '0')}`;
     const project: Project = {
-      id:          projectId,
-      title:       quotation.title.replace(/^Penawaran\s+/i, ''),
+      id: projectId,
+      title: quotation.title.replace(/^Penawaran\s+/i, ''),
       description: quotation.description,
-      category:    quotation.category as ProjectCategory,
-      status:      'Baru',
-      priority:    quotation.priority as ProjectPriority,
-      client:      quotation.client,
-      items:       quotation.items,
-      totalValue:  quotation.totalValue,
-      assignedTo:  quotation.assignedTo,
-      createdAt:   new Date(),
-      deadline:    deadline,
-      notes:       quotation.notes,
-      origin:      'quotation',
+      category: quotation.category as ProjectCategory,
+      status: 'Baru',
+      priority: quotation.priority as ProjectPriority,
+      client: quotation.client,
+      items: quotation.items,
+      totalValue: quotation.totalValue,
+      assignedTo: quotation.assignedTo,
+      createdAt: new Date(),
+      deadline: deadline,
+      notes: quotation.notes,
+      origin: 'quotation',
       quotationId: quotation.id,
       ...(quotation.poNumber && { poNumber: quotation.poNumber }),
+      grandTotal: 0,
+      billingType: 'Reguler'
     };
 
     projectsStoreRef.value.unshift(project);
