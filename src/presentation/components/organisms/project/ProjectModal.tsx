@@ -358,7 +358,7 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
                     key={bt}
                     type="button"
                     onClick={() => setBillingType(bt)}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${
+                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium border transition-all ${
                       billingType === bt
                         ? bt === 'Termin'
                           ? 'bg-purple-500/20 border-purple-500/60 text-purple-300'
@@ -368,7 +368,16 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
                         : 'bg-transparent border-slate-600/50 text-slate-400 hover:border-slate-500 hover:text-slate-300'
                     }`}
                   >
-                    {bt === 'Termin' ? '⚡ Termin' : bt === 'Sewa' ? '🔄 Sewa' : '💳 Reguler'}
+                    <img
+                      src={
+                        bt === 'Termin' ? '/icons/icontermin.svg'
+                        : bt === 'Sewa' ? '/icons/iconsewa.svg'
+                        : '/icons/iconlangsungbayar.svg'
+                      }
+                      alt=""
+                      className="w-4 h-4 shrink-0"
+                    />
+                    {bt === 'Termin' ? 'Termin' : bt === 'Sewa' ? 'Sewa' : 'Reguler'}
                   </button>
                 ))}
               </div>
