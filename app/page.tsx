@@ -6,9 +6,9 @@
 'use client';
 
 import { useDashboard } from '@/src/presentation/hooks/dashboard/useDashboard';
-import { DashboardTemplate } from '@/src/presentation/components/templates/DashboardTemplate';
-import { DashboardSkeleton } from '@/src/presentation/components/templates/DashboardSkeleton';
-import { ErrorTemplate } from '@/src/presentation/components/templates/ErrorTemplate';
+import { DashboardTemplate } from '@/src/presentation/components/templates/shared/DashboardTemplate';
+import { DashboardSkeleton } from '@/src/presentation/components/templates/shared/DashboardSkeleton';
+import { ErrorTemplate } from '@/src/presentation/components/templates/shared/ErrorTemplate';
 import { PermissionGuard } from '@/src/presentation/components/providers/PermissionGuard';
 
 export default function Home() {

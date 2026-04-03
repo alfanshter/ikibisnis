@@ -1,7 +1,7 @@
 'use client';
 
 import { useRoleManagement } from '@/src/presentation/hooks/user/useRoleManagement';
-import { RoleManagementTemplate } from '@/src/presentation/components/templates/RoleManagementTemplate';
+import { RoleManagementTemplate } from '@/src/presentation/components/templates/role/RoleManagementTemplate';
 import { PermissionGuard } from '@/src/presentation/components/providers/PermissionGuard';
 
 export default function RolesPage() {

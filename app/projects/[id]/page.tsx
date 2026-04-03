@@ -3,9 +3,9 @@
 import { use } from 'react';
 import Link from 'next/link';
 import { useProjectDetail } from '@/src/presentation/hooks/project/useProjectDetail';
-import { ProjectDetailTemplate } from '@/src/presentation/components/templates/ProjectDetailTemplate';
-import { DashboardSkeleton } from '@/src/presentation/components/templates/DashboardSkeleton';
-import { Sidebar } from '@/src/presentation/components/organisms/Sidebar';
+import { ProjectDetailTemplate } from '@/src/presentation/components/templates/project/ProjectDetailTemplate';
+import { DashboardSkeleton } from '@/src/presentation/components/templates/shared/DashboardSkeleton';
+import { Sidebar } from '@/src/presentation/components/organisms/shared/Sidebar';
 import { Icon } from '@/src/presentation/components/atoms/Icon';
 
 interface Props {

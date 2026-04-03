@@ -1,7 +1,7 @@
 'use client';
 
 import { useUserManagement } from '@/src/presentation/hooks/user/useUserManagement';
-import { UserManagementTemplate } from '@/src/presentation/components/templates/UserManagementTemplate';
+import { UserManagementTemplate } from '@/src/presentation/components/templates/user/UserManagementTemplate';
 import { PermissionGuard } from '@/src/presentation/components/providers/PermissionGuard';
 
 export default function UsersPage() {

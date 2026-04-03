@@ -1,7 +1,7 @@
 'use client';
 
 import { useProjectManagement } from '@/src/presentation/hooks/project/useProjectManagement';
-import { ProjectManagementTemplate } from '@/src/presentation/components/templates/ProjectManagementTemplate';
+import { ProjectManagementTemplate } from '@/src/presentation/components/templates/project/ProjectManagementTemplate';
 import { PermissionGuard } from '@/src/presentation/components/providers/PermissionGuard';
 
 export default function ProjectsPage() {

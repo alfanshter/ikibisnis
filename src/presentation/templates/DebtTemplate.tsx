@@ -13,8 +13,8 @@ import {
   formatCurrencyIdr,
 } from '@/src/domain/entities/Finance';
 import { DebtToastState } from '@/src/presentation/hooks/finance/useDebt';
-import { Sidebar }  from '@/src/presentation/components/organisms/Sidebar';
-import { TopBar }   from '@/src/presentation/components/organisms/TopBar';
+import { Sidebar }  from '@/src/presentation/components/organisms/shared/Sidebar';
+import { TopBar }   from '@/src/presentation/components/organisms/shared/TopBar';
 import { Icon }     from '@/src/presentation/components/atoms/Icon';
 import { usePermission } from '@/src/presentation/hooks/auth/usePermission';
 

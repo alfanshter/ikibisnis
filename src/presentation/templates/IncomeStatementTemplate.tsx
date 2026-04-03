@@ -4,10 +4,10 @@
  */
 'use client';
 import React from 'react';
-import { Sidebar } from '@/src/presentation/components/organisms/Sidebar';
-import { TopBar } from '@/src/presentation/components/organisms/TopBar';
-import { FinanceSummaryCard } from '@/src/presentation/components/molecules/FinanceSummaryCard';
-import { IncomeStatementTable } from '@/src/presentation/components/organisms/IncomeStatementTable';
+import { Sidebar } from '@/src/presentation/components/organisms/shared/Sidebar';
+import { TopBar } from '@/src/presentation/components/organisms/shared/TopBar';
+import { FinanceSummaryCard } from '@/src/presentation/components/molecules/finance/FinanceSummaryCard';
+import { IncomeStatementTable } from '@/src/presentation/components/organisms/finance/IncomeStatementTable';
 import { IncomeStatement, formatCurrencyIdr } from '@/src/domain/entities/Finance';
 
 interface Props {

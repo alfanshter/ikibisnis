@@ -128,7 +128,8 @@ export interface ProjectAdditionalFees {
 }
 
 export interface Project {
-  id: string;
+  id: string;           // UUID dari backend
+  nomorProyek?: string; // e.g. 'PRJ-001' — display only, bukan untuk URL/delete
   title: string;
   description: string;
   category: ProjectCategory;

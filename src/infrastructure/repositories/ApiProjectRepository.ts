@@ -232,8 +232,9 @@ function mapMarketer(m?: ApiMarketingExternal | null): ExternalMarketer | undefi
 /** Convert list-view ApiProject → local Project entity (minimal fields) */
 function mapApiProject(p: ApiProject): Project {
   return {
-    id:          p.nomorProyek ?? p.id,
-    title:       p.judulProyek,
+    id:           p.id,
+    nomorProyek:  p.nomorProyek,
+    title:        p.judulProyek,
     description: p.deskripsiSingkat ?? '',
     category:    mapCategory(p.kategori),
     status:      mapStatus(p.status),
@@ -269,7 +270,8 @@ function mapApiProjectDetail(p: ApiProjectDetail): Project {
   const grandTotal = calcGrandTotal(totalValue, fees);
 
   return {
-    id:           p.nomorProyek ?? p.id,
+    id:           p.id,
+    nomorProyek:  p.nomorProyek,
     title:        p.judulProyek,
     description:  p.deskripsi ?? p.deskripsiSingkat ?? '',
     category:     mapCategory(p.kategori),
@@ -402,8 +404,15 @@ export class ApiProjectRepository implements IProjectRepository {
 
   // ── Write operations ────────────────────────────────────────────────────────
 
-  getProjectById(id: string): Promise<Project | null> {
-    return this.local.getProjectById(id);
+  async getProjectById(id: string): Promise<Project | null> {
+    try {
+      const detail = await projectApiFetch<ApiProjectDetail>(`${BASE}/${id}`);
+      return mapApiProjectDetail(detail);
+    } catch (err) {
+      // 404 → return null
+      if (err instanceof Error && err.message.toLowerCase().includes('tidak ditemukan')) return null;
+      throw err;
+    }
   }
 
   async createProject(dto: CreateProjectDTO): Promise<Project> {
@@ -487,8 +496,29 @@ export class ApiProjectRepository implements IProjectRepository {
     return this.local.updateProject(dto);
   }
 
-  deleteProject(id: string): Promise<void> {
-    return this.local.deleteProject(id);
+  async deleteProject(id: string): Promise<void> {
+    const token = getToken();
+    const res = await fetch(`${BASE}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    const json = await res.json();
+
+    if (res.status === 403 || json.statusCode === 403) {
+      throw new PermissionError(
+        Array.isArray(json.message) ? json.message[0] : (json.message ?? 'Akses ditolak'),
+      );
+    }
+
+    if (!res.ok && !json.success) {
+      throw new Error(
+        Array.isArray(json.message) ? json.message[0] : (json.message ?? 'Gagal menghapus proyek'),
+      );
+    }
   }
 
   payTermin(dto: PayTerminDTO): Promise<Project> {

@@ -4,7 +4,7 @@
  */
 'use client';
 import { useQuotationManagement } from '@/src/presentation/hooks/quotation/useQuotationManagement';
-import { QuotationManagementTemplate } from '@/src/presentation/components/templates/QuotationManagementTemplate';
+import { QuotationManagementTemplate } from '@/src/presentation/components/templates/quotation/QuotationManagementTemplate';
 import { PermissionGuard } from '@/src/presentation/components/providers/PermissionGuard';
 
 export default function QuotationsPage() {

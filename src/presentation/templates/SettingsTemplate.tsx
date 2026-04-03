@@ -4,12 +4,12 @@
  */
 'use client';
 import React from 'react';
-import { Sidebar } from '@/src/presentation/components/organisms/Sidebar';
-import { TopBar } from '@/src/presentation/components/organisms/TopBar';
-import { StoreSettingsForm } from '@/src/presentation/components/organisms/StoreSettingsForm';
-import { ProfileSettingsForm } from '@/src/presentation/components/organisms/ProfileSettingsForm';
-import { SecuritySettingsForm } from '@/src/presentation/components/organisms/SecuritySettingsForm';
-import { AppearanceSettingsForm } from '@/src/presentation/components/organisms/AppearanceSettingsForm';
+import { Sidebar } from '@/src/presentation/components/organisms/shared/Sidebar';
+import { TopBar } from '@/src/presentation/components/organisms/shared/TopBar';
+import { StoreSettingsForm } from '@/src/presentation/components/organisms/settings/StoreSettingsForm';
+import { ProfileSettingsForm } from '@/src/presentation/components/organisms/settings/ProfileSettingsForm';
+import { SecuritySettingsForm } from '@/src/presentation/components/organisms/settings/SecuritySettingsForm';
+import { AppearanceSettingsForm } from '@/src/presentation/components/organisms/settings/AppearanceSettingsForm';
 import { Icon } from '@/src/presentation/components/atoms/Icon';
 import {
   AppSettings, UserProfile, AppearanceSettings, ChangePasswordDTO,
