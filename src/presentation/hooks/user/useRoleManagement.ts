@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Hook: useRoleManagement
  * All operations go through the real /api/v1/roles REST API.
- * Follows clean architecture: hook → fetch → API route → use-case → repository.
+ * Follows clean architecture: hook â†’ fetch â†’ API route â†’ use-case â†’ repository.
  */
 'use client';
 
@@ -15,19 +15,18 @@ import {
 } from '@/src/domain/entities/Role';
 import { apiFetch } from '@/src/infrastructure/api/apiFetch';
 
-// ── Constants ────────────────────────────────────────────────────────────────
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-const BASE = `${BACKEND}/api/v1/roles`;
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const BASE = `/api/proxy/v1/roles`;
 
-// ── Toast type ─────────────────────────────────────────────────────────────
+// â”€â”€ Toast type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface ToastState {
   msg:  string;
   type: 'success' | 'error';
 }
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Hook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const useRoleManagement = () => {
-  // ── State ────────────────────────────────────────────────────────────────
+  // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [collection,        setCollection]        = useState<RoleCollection | null>(null);
   const [selectedRole,      setSelectedRole]       = useState<Role | null>(null);
   const [detailLoading,     setDetailLoading]      = useState(false);
@@ -44,13 +43,13 @@ export const useRoleManagement = () => {
   // Abort controller for in-flight list requests
   const abortRef = useRef<AbortController | null>(null);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const showToast = useCallback((msg: string, type: ToastState['type'] = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   }, []);
 
-  // ── Fetch list ───────────────────────────────────────────────────────────
+  // â”€â”€ Fetch list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchRoles = useCallback(async (q: GetRolesQuery) => {
     abortRef.current?.abort();
     const ctrl = new AbortController();
@@ -82,7 +81,7 @@ export const useRoleManagement = () => {
 
   useEffect(() => { fetchRoles(query); }, [query, fetchRoles]);
 
-  // ── Select a role (loads fresh detail) ───────────────────────────────────
+  // â”€â”€ Select a role (loads fresh detail) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSelectRole = useCallback(async (role: Role) => {
     setDetailLoading(true);
     setSelectedRole(role);
@@ -96,7 +95,7 @@ export const useRoleManagement = () => {
     }
   }, [showToast]);
 
-  // ── Create ────────────────────────────────────────────────────────────────
+  // â”€â”€ Create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleCreateRole = useCallback(async (dto: CreateRoleApiDTO) => {
     setSaving(true);
     try {
@@ -115,7 +114,7 @@ export const useRoleManagement = () => {
     }
   }, [showToast]);
 
-  // ── Update (from edit modal) ──────────────────────────────────────────────
+  // â”€â”€ Update (from edit modal) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleUpdateRole = useCallback(async (id: string, dto: UpdateRoleApiDTO) => {
     setSaving(true);
     try {
@@ -135,7 +134,7 @@ export const useRoleManagement = () => {
     }
   }, [showToast]);
 
-  // ── Save permissions inline ───────────────────────────────────────────────
+  // â”€â”€ Save permissions inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSavePermissions = useCallback(async () => {
     if (!selectedRole) return;
     setSaving(true);
@@ -154,21 +153,21 @@ export const useRoleManagement = () => {
     }
   }, [selectedRole, showToast]);
 
-  // ── Toggle active status ──────────────────────────────────────────────────
+  // â”€â”€ Toggle active status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleToggleStatus = useCallback(async (role: Role) => {
     try {
       const updated = await apiFetch<Role>(`${BASE}/${role.id}/toggle-status`, {
         method: 'PATCH',
       });
       setSelectedRole(prev => (prev?.id === updated.id ? updated : prev));
-      showToast(`Status "${updated.name}" → ${updated.isActive ? 'Aktif' : 'Nonaktif'}`);
+      showToast(`Status "${updated.name}" â†’ ${updated.isActive ? 'Aktif' : 'Nonaktif'}`);
       setQuery(q => ({ ...q }));
     } catch (err) {
       showToast((err as Error).message, 'error');
     }
   }, [showToast]);
 
-  // ── Soft delete ───────────────────────────────────────────────────────────
+  // â”€â”€ Soft delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDeleteRole = useCallback(async () => {
     if (!deletingRole) return;
     setSaving(true);
@@ -186,7 +185,7 @@ export const useRoleManagement = () => {
     }
   }, [deletingRole, showToast]);
 
-  // ── Restore ───────────────────────────────────────────────────────────────
+  // â”€â”€ Restore â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleRestoreRole = useCallback(async (role: Role) => {
     try {
       const restored = await apiFetch<Role>(`${BASE}/${role.id}/restore`, { method: 'PATCH' });
@@ -197,7 +196,7 @@ export const useRoleManagement = () => {
     }
   }, [showToast]);
 
-  // ── Search / filter ───────────────────────────────────────────────────────
+  // â”€â”€ Search / filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSearch = useCallback((search: string) => {
     setQuery(q => ({ ...q, search: search || undefined, page: 1 }));
   }, []);
@@ -248,3 +247,5 @@ export const useRoleManagement = () => {
     onRefresh:            () => setQuery(q => ({ ...q })),
   };
 };
+
+

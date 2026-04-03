@@ -80,11 +80,11 @@ export const UserModal: React.FC<UserModalProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+  const BASE_ROLES = `/api/proxy/v1/roles`;
 
   useEffect(() => {
     let cancelled = false;
-    apiFetch<{ data: RoleOption[]; total: number }>(`${BACKEND}/api/v1/roles?limit=100`)
+    apiFetch<{ data: RoleOption[]; total: number }>(`${BASE_ROLES}?limit=100`)
       .then(result => {
         if (cancelled) return;
         const list: RoleOption[] = (result?.data ?? []).map(r => ({
@@ -96,7 +96,7 @@ export const UserModal: React.FC<UserModalProps> = ({
       .catch(() => {/* silent */})
       .finally(() => { if (!cancelled) setRolesLoading(false); });
     return () => { cancelled = true; };
-  }, [BACKEND, roleId]);
+  }, [BASE_ROLES, roleId]);
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};

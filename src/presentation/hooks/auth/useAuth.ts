@@ -73,43 +73,8 @@ export const useAuth = () => {
     email: string,
     password: string,
   ): Promise<{ success: true } | { success: false; message: string }> => {
-    const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
-    // ── Dummy / offline login ────────────────────────────────────────────────
-    // Aktif ketika backend tidak berjalan (development / demo).
-    // Gunakan email apapun dengan password: "demo123"
-    const DEMO_PASSWORD = 'demo123';
-    const allFeatures: RolePermission[] = [
-      'dashboard','user_management_roles','user_management_users',
-      'projects','penawaran','laporan_harian','laporan_neraca',
-      'laporan_laba_rugi','laporan_arus_kas','hutang_piutang','settings',
-    ].map(f => ({ feature: f as RolePermission['feature'], actions: ['read','write','update','delete'] as RolePermission['actions'] }));
-
-    if (password === DEMO_PASSWORD) {
-      const dummySession: AuthSession = {
-        accessToken: 'demo-token',
-        expiresIn:   86400,
-        expiresAt:   Date.now() + 86400 * 1000,
-        user: {
-          id:          'USR-000',
-          fullName:    email.split('@')[0] || 'Admin Demo',
-          email,
-          roleId:      'ROLE-001',
-          roleName:    'Super Admin',
-          gender:      'male',
-          isActive:    true,
-          lastLoginAt: new Date().toISOString(),
-          permissions: allFeatures,
-        },
-        permissions: allFeatures,
-      };
-      saveSession(dummySession);
-      return { success: true };
-    }
-    // ────────────────────────────────────────────────────────────────────────
-
     try {
-      const res = await fetch(`${BACKEND}/api/v1/auth/login`, {
+      const res = await fetch(`/api/proxy/v1/auth/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email, password }),
@@ -156,13 +121,12 @@ export const useAuth = () => {
   }, []);
 
   const logout = useCallback(async () => {
-    const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
     const token = getToken();
 
     // Call backend to revoke the token (fire-and-forget — clear session regardless)
     if (token) {
       try {
-        await fetch(`${BACKEND}/api/v1/auth/logout`, {
+        await fetch(`/api/proxy/v1/auth/logout`, {
           method:  'POST',
           headers: {
             'Content-Type':  'application/json',

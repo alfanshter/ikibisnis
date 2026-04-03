@@ -25,7 +25,7 @@ import {
 import { Icon } from '../../atoms/Icon';
 import { apiFetch } from '@/src/infrastructure/api/apiFetch';
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const BASE_PROJECTS = `/api/proxy/v1/projects`;
 
 const CATEGORIES: ProjectCategory[] = [
   'Pengadaan Barang', 'Pengadaan Jasa', 'Pengadaan ATK',
@@ -73,7 +73,7 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
 
   useEffect(() => {
     apiFetch<{ data: UserOption[]; total: number }>(
-      `${BACKEND}/api/v1/users?limit=100&isActive=true`
+      `/api/proxy/v1/users?limit=100&isActive=true`
     ).then(res => {
       const list = res.data ?? [];
       setUsers(list);

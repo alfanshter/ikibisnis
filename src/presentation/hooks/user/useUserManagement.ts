@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Hook: useUserManagement
  * All operations go through the real /api/v1/users REST API.
- * Pattern mirrors useRoleManagement: hook → fetch → backend.
+ * Pattern mirrors useRoleManagement: hook â†’ fetch â†’ backend.
  */
 
 'use client';
@@ -17,16 +17,15 @@ import {
 } from '@/src/domain/entities/User';
 import { apiFetch } from '@/src/infrastructure/api/apiFetch';
 
-// ── Constants ────────────────────────────────────────────────────────────────
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-const BASE    = `${BACKEND}/api/v1/users`;
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const BASE    = `/api/proxy/v1/users`;
 
-// ── Toast ─────────────────────────────────────────────────────────────────
+// â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface ToastState { msg: string; type: 'success' | 'error' }
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Hook â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const useUserManagement = () => {
-  // ── State ────────────────────────────────────────────────────────────────
+  // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [collection,        setCollection]        = useState<ApiUserCollection | null>(null);
   const [listLoading,       setListLoading]        = useState(true);
   const [saving,            setSaving]             = useState(false);
@@ -44,13 +43,13 @@ export const useUserManagement = () => {
 
   const abortRef = useRef<AbortController | null>(null);
 
-  // ── Toast helper ─────────────────────────────────────────────────────────
+  // â”€â”€ Toast helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const showToast = useCallback((msg: string, type: ToastState['type'] = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   }, []);
 
-  // ── Fetch list ───────────────────────────────────────────────────────────
+  // â”€â”€ Fetch list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchUsers = useCallback(async (q: GetUsersQuery) => {
     abortRef.current?.abort();
     const ctrl = new AbortController();
@@ -80,7 +79,7 @@ export const useUserManagement = () => {
 
   useEffect(() => { fetchUsers(query); }, [query, fetchUsers]);
 
-  // ── Create ────────────────────────────────────────────────────────────────
+  // â”€â”€ Create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleCreate = useCallback(async (dto: CreateUserApiDTO) => {
     setSaving(true);
     try {
@@ -98,7 +97,7 @@ export const useUserManagement = () => {
     }
   }, [showToast]);
 
-  // ── Update ────────────────────────────────────────────────────────────────
+  // â”€â”€ Update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleUpdate = useCallback(async (id: string, dto: UpdateUserApiDTO) => {
     setSaving(true);
     try {
@@ -117,7 +116,7 @@ export const useUserManagement = () => {
     }
   }, [showToast]);
 
-  // ── Change password ───────────────────────────────────────────────────────
+  // â”€â”€ Change password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleChangePassword = useCallback(async (id: string, dto: ChangePasswordDTO) => {
     setSaving(true);
     try {
@@ -135,20 +134,20 @@ export const useUserManagement = () => {
     }
   }, [showToast]);
 
-  // ── Toggle status ─────────────────────────────────────────────────────────
+  // â”€â”€ Toggle status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleToggleStatus = useCallback(async (user: ApiUser) => {
     try {
       const updated = await apiFetch<ApiUser>(`${BASE}/${user.id}/toggle-status`, {
         method: 'PATCH',
       });
-      showToast(`Status "${updated.fullName}" → ${updated.isActive ? 'Aktif' : 'Non-aktif'}`);
+      showToast(`Status "${updated.fullName}" â†’ ${updated.isActive ? 'Aktif' : 'Non-aktif'}`);
       setQuery(q => ({ ...q }));
     } catch (err) {
       showToast((err as Error).message, 'error');
     }
   }, [showToast]);
 
-  // ── Delete ────────────────────────────────────────────────────────────────
+  // â”€â”€ Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDelete = useCallback(async () => {
     if (!deletingUser) return;
     setSaving(true);
@@ -165,12 +164,12 @@ export const useUserManagement = () => {
     }
   }, [deletingUser, showToast]);
 
-  // ── Query helpers ─────────────────────────────────────────────────────────
+  // â”€â”€ Query helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handlePageChange   = (page: number)   => setQuery(q => ({ ...q, page }));
   const handleSearchChange = (search: string) => setQuery(q => ({ ...q, search: search || undefined, page: 1 }));
   const handleFilterChange = (patch: Partial<GetUsersQuery>) => setQuery(q => ({ ...q, ...patch, page: 1 }));
 
-  // ── Modal openers ─────────────────────────────────────────────────────────
+  // â”€â”€ Modal openers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const openCreate          = ()           => setShowCreateModal(true);
   const openEdit            = (u: ApiUser) => { setEditingUser(u); setShowEditModal(true); };
   const openDeleteConfirm   = (u: ApiUser) => { setDeletingUser(u); setShowDeleteConfirm(true); };
@@ -197,3 +196,5 @@ export const useUserManagement = () => {
     closeCreate, closeEdit, closeDeleteConfirm, closeChangePassword,
   };
 };
+
+
