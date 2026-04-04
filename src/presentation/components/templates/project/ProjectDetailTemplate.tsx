@@ -735,8 +735,8 @@ const Card: React.FC<{ title: string; icon: string; children: React.ReactNode }>
 );
 
 const InfoRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="flex justify-between items-start text-sm py-2 border-b border-slate-700/30 last:border-0 gap-3">
-    <span className="text-slate-500 shrink-0">{label}</span>
-    <span className="text-slate-200 text-right break-all">{value}</span>
+  <div className="flex flex-col gap-0.5 text-sm py-2 border-b border-slate-700/30 last:border-0">
+    <span className="text-slate-500 text-xs">{label}</span>
+    <span className="text-slate-200 break-words">{value}</span>
   </div>
 );

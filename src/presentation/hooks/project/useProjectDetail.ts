@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Project, ProjectStatus, UpdateProjectDTO, PayTerminDTO, PaymentMethod, Termin } from '@/src/domain/entities/Project';
 import DIContainer from '@/src/infrastructure/di/container';
+import { apiFetch } from '@/src/infrastructure/api/apiFetch';
 
 export const useProjectDetail = (id: string) => {
   const router = useRouter();
@@ -27,6 +28,17 @@ export const useProjectDetail = (id: string) => {
       setLoading(true);
       const data = await container.getGetProjectByIdUseCase().execute(id);
       if (!data) { setNotFound(true); return; }
+
+      // Resolve assignedTo: the API stores a user ID — fetch the user's fullName
+      if (data.assignedTo && /^[0-9a-f-]{36}$/.test(data.assignedTo)) {
+        try {
+          const user = await apiFetch<{ fullName: string }>(`/api/proxy/v1/users/${data.assignedTo}`);
+          data.assignedTo = user.fullName;
+        } catch {
+          // silent — keep the ID if resolution fails
+        }
+      }
+
       setProject(data);
     } catch (err) {
       console.error('Failed to load project:', err);
