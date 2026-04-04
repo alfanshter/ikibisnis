@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ApiUser,
   ApiUserCollection,
@@ -152,6 +153,7 @@ export const UserManagementTemplate: React.FC<UserManagementTemplateProps> = ({
   closeChangePassword,
 }) => {
   const { canWrite, canUpdate, canDelete } = usePermission('user_management_users');
+  const router = useRouter();
 
   return (
   <div className="flex min-h-screen bg-slate-900">
@@ -217,6 +219,7 @@ export const UserManagementTemplate: React.FC<UserManagementTemplateProps> = ({
       {/* Table */}
       <UserTable
         collection={collection}
+        onView={user => router.push(`/users/${user.id}`)}
         onEdit={openEdit}
         onDelete={openDeleteConfirm}
         onToggle={onToggleStatus}

@@ -10,6 +10,7 @@ import { Pagination } from '../../molecules/shared/Pagination';
 
 interface UserTableProps {
   collection:       ApiUserCollection | null;
+  onView:           (user: ApiUser) => void;
   onEdit:           (user: ApiUser) => void;
   onDelete:         (user: ApiUser) => void;
   onToggle:         (user: ApiUser) => void;
@@ -24,6 +25,7 @@ const TABLE_HEADERS = ['USER', 'ROLE', 'STATUS', 'CREATED', 'ACTIONS'];
 
 export const UserTable: React.FC<UserTableProps> = ({
   collection,
+  onView,
   onEdit,
   onDelete,
   onToggle,
@@ -71,6 +73,7 @@ export const UserTable: React.FC<UserTableProps> = ({
               <UserTableRow
                 key={user.id}
                 user={user}
+                onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onToggle={onToggle}

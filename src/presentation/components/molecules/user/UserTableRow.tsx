@@ -12,6 +12,7 @@ import { UserAvatarComponent } from './UserAvatar';
 
 interface UserTableRowProps {
   user:     ApiUser;
+  onView:   (user: ApiUser) => void;
   onEdit:   (user: ApiUser) => void;
   onDelete: (user: ApiUser) => void;
   onToggle: (user: ApiUser) => void;
@@ -29,7 +30,7 @@ const formatDate = (iso: string): string => {
 };
 
 export const UserTableRow: React.FC<UserTableRowProps> = ({
-  user, onEdit, onDelete, onToggle, onChangePassword,
+  user, onView, onEdit, onDelete, onToggle, onChangePassword,
   canUpdate = true, canDelete = true,
 }) => (
   <tr className="border-t border-slate-700/50 hover:bg-slate-800/30 transition-colors group">
@@ -66,6 +67,12 @@ export const UserTableRow: React.FC<UserTableRowProps> = ({
     {/* ACTIONS */}
     <td className="px-6 py-4">
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* View detail */}
+        <button onClick={() => onView(user)}
+          className="p-1.5 text-slate-400 hover:text-purple-400 hover:bg-purple-500/10 rounded-lg transition-all"
+          title="Lihat detail">
+          <Icon name="eye" className="w-4 h-4" />
+        </button>
         {canUpdate ? (
           <button onClick={() => onEdit(user)}
             className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all"
