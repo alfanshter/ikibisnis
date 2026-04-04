@@ -1,5 +1,5 @@
 /**
- * Organism Component: UserModal
+ * Organism Component: UserModalnewmuhib
  * Create or edit a user — fields match POST/PUT /api/v1/users exactly.
  */
 
