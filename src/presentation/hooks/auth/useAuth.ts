@@ -41,12 +41,16 @@ export const getSession = (): AuthSession | null => {
     if (!raw) return null;
     const session: AuthSession = JSON.parse(raw);
     if (Date.now() > session.expiresAt) {
-      localStorage.removeItem(SESSION_KEY);
+      clearSession();
+      // Redirect to login — token has expired
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
       return null;
     }
     // Evict stale sessions that pre-date the permissions field
     if (!Array.isArray(session.permissions)) {
-      localStorage.removeItem(SESSION_KEY);
+      clearSession();
       return null;
     }
     return session;
@@ -63,6 +67,10 @@ const saveSession = (session: AuthSession) => {
 
 const clearSession = () => {
   localStorage.removeItem(SESSION_KEY);
+  // Also expire the middleware cookie so the next navigation hits the redirect
+  if (typeof document !== 'undefined') {
+    document.cookie = 'nexus_token=; path=/; max-age=0; SameSite=Strict';
+  }
 };
 
 // ── Hook ──────────────────────────────────────────────────────────────────────

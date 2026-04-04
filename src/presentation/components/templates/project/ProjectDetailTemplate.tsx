@@ -66,7 +66,7 @@ export const ProjectDetailTemplate: React.FC<ProjectDetailTemplateProps> = ({
           {/* ── Top Bar ── */}
           <TopBar
             title="Detail Proyek"
-            subtitle={project.id}
+            subtitle={project.client?.name ?? project.id}
             action={
               <div className="flex items-center gap-3">
                 <button
@@ -91,7 +91,7 @@ export const ProjectDetailTemplate: React.FC<ProjectDetailTemplateProps> = ({
           <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6 mb-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-slate-500 text-xs font-mono mb-1">{project.id}</p>
+                <p className="text-slate-500 text-xs font-mono mb-1">{project.client?.name ?? project.id}</p>
                 <h1 className="text-white text-2xl font-bold leading-tight mb-3">{project.title}</h1>
                 <div className="flex flex-wrap gap-2">
                   <CategoryBadge category={project.category} />

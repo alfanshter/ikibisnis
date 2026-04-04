@@ -14,6 +14,16 @@ export class PermissionError extends Error {
   }
 }
 
+/** Clears local session + cookie and navigates to /login (client-side only) */
+function redirectToLogin() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('nexus_session');
+  document.cookie = 'nexus_token=; path=/; max-age=0; SameSite=Strict';
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+}
+
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const token = getToken();
 
@@ -27,6 +37,12 @@ export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   });
 
   const json = await res.json();
+
+  // 401 — token expired or invalid → force re-login
+  if (res.status === 401 || json.statusCode === 401) {
+    redirectToLogin();
+    throw new Error('Sesi habis. Silakan login kembali.');
+  }
 
   // 403 — permission denied
   if (res.status === 403 || json.statusCode === 403) {
