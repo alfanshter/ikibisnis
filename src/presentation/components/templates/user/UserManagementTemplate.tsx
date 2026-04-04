@@ -23,6 +23,62 @@ import { DeleteConfirmModal } from '../../organisms/user/DeleteConfirmModal';
 import { Icon } from '../../atoms/Icon';
 import { usePermission } from '@/src/presentation/hooks/auth/usePermission';
 
+/** Sidebar-style custom select dropdown (matches Projects page) */
+interface SelectOption { value: string; label: string }
+interface CustomSelectProps {
+  value: string;
+  options: SelectOption[];
+  onChange: (v: string) => void;
+}
+const CustomSelect: React.FC<CustomSelectProps> = ({ value, options, onChange }) => {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(p => !p)}
+        className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 border ${
+          open
+            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+            : 'text-slate-400 hover:bg-slate-800/80 hover:text-white border-slate-700/50'
+        }`}
+      >
+        <span className="whitespace-nowrap">{selected?.label}</span>
+        <Icon name={open ? 'chevron-up' : 'chevron-down'} className="w-3.5 h-3.5 shrink-0" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 min-w-[10rem] bg-slate-900/95 backdrop-blur-sm border border-slate-700/50 rounded-lg shadow-xl z-50 py-1">
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`w-full flex items-center px-3 py-2.5 text-sm transition-all duration-150 ${
+                value === opt.value
+                  ? 'bg-blue-500/10 text-blue-400'
+                  : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface UserManagementTemplateProps {
   /* Data */
   collection:     ApiUserCollection | null;
@@ -136,26 +192,26 @@ export const UserManagementTemplate: React.FC<UserManagementTemplateProps> = ({
         </div>
 
         {/* Status filter */}
-        <select
+        <CustomSelect
           value={query.isActive === undefined ? '' : String(query.isActive)}
-          onChange={e => onFilterChange({ isActive: e.target.value === '' ? undefined : e.target.value === 'true' })}
-          className="px-3 py-2 bg-slate-800 border border-slate-700/50 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-blue-500/70"
-        >
-          <option value="">Semua Status</option>
-          <option value="true">Aktif</option>
-          <option value="false">Non-aktif</option>
-        </select>
+          options={[
+            { value: '', label: 'Semua Status' },
+            { value: 'true', label: 'Aktif' },
+            { value: 'false', label: 'Non-aktif' },
+          ]}
+          onChange={v => onFilterChange({ isActive: v === '' ? undefined : v === 'true' })}
+        />
 
         {/* Gender filter */}
-        <select
+        <CustomSelect
           value={query.gender ?? ''}
-          onChange={e => onFilterChange({ gender: e.target.value as 'male' | 'female' | undefined || undefined })}
-          className="px-3 py-2 bg-slate-800 border border-slate-700/50 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-blue-500/70"
-        >
-          <option value="">Semua Gender</option>
-          <option value="male">Laki-laki</option>
-          <option value="female">Perempuan</option>
-        </select>
+          options={[
+            { value: '', label: 'Semua Gender' },
+            { value: 'male', label: 'Laki-laki' },
+            { value: 'female', label: 'Perempuan' },
+          ]}
+          onChange={v => onFilterChange({ gender: v === '' ? undefined : v as 'male' | 'female' })}
+        />
       </div>
 
       {/* Table */}
