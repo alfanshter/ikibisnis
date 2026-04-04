@@ -140,7 +140,7 @@ export const useUserManagement = () => {
       const updated = await apiFetch<ApiUser>(`${BASE}/${user.id}/toggle-status`, {
         method: 'PATCH',
       });
-      showToast(`Status "${updated.fullName}" â†’ ${updated.isActive ? 'Aktif' : 'Non-aktif'}`);
+      showToast(`${updated.fullName} berhasil di${updated.isActive ? 'aktifkan' : 'nonaktifkan'}`);
       setQuery(q => ({ ...q }));
     } catch (err) {
       showToast((err as Error).message, 'error');
