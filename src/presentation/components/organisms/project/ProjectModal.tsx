@@ -3,7 +3,8 @@
  * Add / Edit project form modal.
  */
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Project,
   ProjectCategory,
@@ -26,6 +27,190 @@ import { Icon } from '../../atoms/Icon';
 import { apiFetch } from '@/src/infrastructure/api/apiFetch';
 
 const BASE_PROJECTS = `/api/proxy/v1/projects`;
+
+/* ─── ModalSelect ─────────────────────────────────────────────────────────── */
+interface MSelectOption { value: string; label: string }
+interface ModalSelectProps { value: string; options: MSelectOption[]; onChange: (v: string) => void; error?: boolean; }
+const ModalSelect: React.FC<ModalSelectProps> = ({ value, options, onChange, error }) => {
+  const [open, setOpen] = useState(false);
+  const [pos,  setPos]  = useState({ top: 0, left: 0, width: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+    }
+    setOpen(p => !p);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => { if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={handleOpen}
+        className={`w-full flex items-center justify-between px-3 py-2.5 bg-slate-700/50 border rounded-lg text-sm transition-colors ${
+          open ? 'border-blue-500/50' : error ? 'border-red-500/50' : 'border-slate-600/50 hover:border-slate-500/70'
+        } ${selected ? 'text-white' : 'text-slate-500'}`}
+      >
+        <span className="truncate">{selected?.label ?? '-- Pilih --'}</span>
+        <Icon name={open ? 'chevron-up' : 'chevron-down'} className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
+      </button>
+      {open && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+          className="bg-slate-800 border border-slate-600/50 rounded-lg shadow-2xl py-1 overflow-hidden"
+        >
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onMouseDown={() => { onChange(opt.value); setOpen(false); }}
+              className={`w-full flex items-center px-3 py-2.5 text-sm transition-all ${
+                value === opt.value ? 'bg-blue-500/10 text-blue-400' : 'text-slate-300 hover:bg-slate-700/60 hover:text-white'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
+
+/* ─── ModalDatePicker ─────────────────────────────────────────────────────── */
+const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const DAYS_ID   = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const ModalDatePicker: React.FC<{ value: string; onChange: (v: string) => void; error?: boolean }> = ({ value, onChange, error }) => {
+  const [open,    setOpen]    = useState(false);
+  const [pos,     setPos]     = useState({ top: 0, left: 0, width: 0 });
+  const [showYearPicker, setShowYearPicker] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const today  = new Date();
+  const parsed = value ? new Date(value + 'T00:00:00') : null;
+  const [viewYear,  setViewYear]  = useState(parsed?.getFullYear()  ?? today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(parsed?.getMonth()     ?? today.getMonth());
+
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 4, left: r.left, width: Math.max(r.width, 280) });
+    }
+    setOpen(p => !p);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => { if (btnRef.current && !btnRef.current.contains(e.target as Node)) { setOpen(false); setShowYearPicker(false); } };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+
+  const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
+  const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
+
+  const firstDay    = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const selectDay = (day: number) => {
+    const mm = String(viewMonth + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    onChange(`${viewYear}-${mm}-${dd}`);
+    setOpen(false); setShowYearPicker(false);
+  };
+
+  const isSelected = (day: number) => parsed && parsed.getFullYear() === viewYear && parsed.getMonth() === viewMonth && parsed.getDate() === day;
+  const isToday    = (day: number) => today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
+  const displayValue = () => parsed ? `${parsed.getDate()} ${MONTHS_ID[parsed.getMonth()].slice(0,3)} ${parsed.getFullYear()}` : null;
+  const yearRange = Array.from({ length: 17 }, (_, i) => viewYear - 8 + i);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={handleOpen}
+        className={`w-full flex items-center justify-between px-3 py-2.5 bg-slate-700/50 border rounded-lg text-sm transition-colors ${
+          open ? 'border-blue-500/50' : error ? 'border-red-500/50' : 'border-slate-600/50 hover:border-slate-500/70'
+        } ${value ? 'text-white' : 'text-slate-500'}`}
+      >
+        <span>{displayValue() ?? 'Pilih tanggal'}</span>
+        <Icon name="calendar" className="w-4 h-4 text-slate-500 shrink-0" />
+      </button>
+      {open && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+          className="bg-slate-900 border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden"
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <button type="button" onClick={() => setShowYearPicker(p => !p)}
+              className="flex items-center gap-1 text-sm font-semibold text-white hover:text-blue-400 transition-colors">
+              {MONTHS_ID[viewMonth]} {viewYear}
+              <Icon name={showYearPicker ? 'chevron-up' : 'chevron-down'} className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+            {!showYearPicker && (
+              <div className="flex gap-1">
+                <button type="button" onClick={prevMonth} className="p-1 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all"><Icon name="chevron-left" className="w-4 h-4" /></button>
+                <button type="button" onClick={nextMonth} className="p-1 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all"><Icon name="chevron-right" className="w-4 h-4" /></button>
+              </div>
+            )}
+          </div>
+          {showYearPicker ? (
+            <div className="grid grid-cols-4 gap-1 px-3 pb-3">
+              {yearRange.map(y => (
+                <button key={y} type="button" onMouseDown={() => { setViewYear(y); setShowYearPicker(false); }}
+                  className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    y === viewYear ? 'bg-blue-500 text-white' : 'text-slate-400 hover:bg-slate-700/60 hover:text-white'
+                  }`}>{y}</button>
+              ))}
+            </div>
+          ) : (
+            <div className="px-3 pb-3">
+              <div className="grid grid-cols-7 mb-1">
+                {DAYS_ID.map(d => <div key={d} className="text-center text-xs font-medium text-slate-500 py-1">{d}</div>)}
+              </div>
+              <div className="grid grid-cols-7 gap-y-0.5">
+                {cells.map((day, i) => (
+                  <div key={i} className="flex items-center justify-center">
+                    {day !== null ? (
+                      <button type="button" onClick={() => selectDay(day)}
+                        className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                          isSelected(day) ? 'bg-blue-500 text-white'
+                          : isToday(day)  ? 'border border-blue-500/50 text-blue-400 hover:bg-blue-500/10'
+                          : 'text-slate-300 hover:bg-slate-700/60 hover:text-white'
+                        }`}>{day}</button>
+                    ) : <span />}
+                  </div>
+                ))}
+              </div>
+              {value && (
+                <div className="pt-2 border-t border-slate-700/40 mt-2">
+                  <button type="button" onClick={() => { onChange(''); setOpen(false); }}
+                    className="text-xs text-slate-500 hover:text-red-400 transition-colors">Hapus tanggal</button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
 
 const CATEGORIES: ProjectCategory[] = [
   'Pengadaan Barang', 'Pengadaan Jasa', 'Pengadaan ATK',
@@ -287,9 +472,11 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
               </div>
               <div>
                 <label className="block text-slate-300 text-sm mb-1.5">Kategori</label>
-                <select className={inputCls()} value={category} onChange={e => setCategory(e.target.value as ProjectCategory)}>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <ModalSelect
+                  value={category}
+                  onChange={v => setCategory(v as ProjectCategory)}
+                  options={CATEGORIES.map(c => ({ value: c, label: c }))}
+                />
               </div>
             </div>
 
@@ -320,24 +507,27 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-slate-300 text-sm mb-1.5">Prioritas</label>
-                <select className={inputCls()} value={priority} onChange={e => setPriority(e.target.value as ProjectPriority)}>
-                  {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
+                <ModalSelect
+                  value={priority}
+                  onChange={v => setPriority(v as ProjectPriority)}
+                  options={PRIORITIES.map(p => ({ value: p, label: p }))}
+                />
               </div>
               <div>
                 <label className="block text-slate-300 text-sm mb-1.5">Ditugaskan ke</label>
-                <select className={inputCls()} value={assignedToUserId} onChange={e => setAssignedToUserId(e.target.value)}>
-                  {users.length === 0 && (
-                    <option value="" disabled>Memuat pengguna…</option>
-                  )}
-                  {users.map(u => (
-                    <option key={u.id} value={u.id}>{u.fullName}</option>
-                  ))}
-                </select>
+                {users.length === 0 ? (
+                  <div className="w-full bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2.5 text-sm text-slate-500 animate-pulse">Memuat pengguna…</div>
+                ) : (
+                  <ModalSelect
+                    value={assignedToUserId}
+                    onChange={setAssignedToUserId}
+                    options={users.map(u => ({ value: u.id, label: u.fullName }))}
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-slate-300 text-sm mb-1.5">Deadline <span className="text-red-400">*</span></label>
-                <input type="date" className={inputCls(errors.deadline)} value={deadline} onChange={e => setDeadline(e.target.value)} />
+                <ModalDatePicker value={deadline} onChange={setDeadline} error={!!errors.deadline} />
                 {errors.deadline && <p className="text-red-400 text-xs mt-1">{errors.deadline}</p>}
               </div>
             </div>
@@ -435,11 +625,10 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-slate-500 text-xs mb-1 block">Jatuh Tempo</label>
-                          <input
-                            type="date"
-                            className={inputCls(errors[`termin_due_${i}`])}
+                          <ModalDatePicker
                             value={t.dueDate}
-                            onChange={e => setTermins(prev => prev.map((x, idx) => idx === i ? { ...x, dueDate: e.target.value } : x))}
+                            onChange={v => setTermins(prev => prev.map((x, idx) => idx === i ? { ...x, dueDate: v } : x))}
+                            error={!!errors[`termin_due_${i}`]}
                           />
                           {errors[`termin_due_${i}`] && <p className="text-red-400 text-xs mt-0.5">{errors[`termin_due_${i}`]}</p>}
                         </div>
@@ -479,22 +668,12 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-slate-400 text-xs mb-1 block">Tanggal Mulai <span className="text-red-400">*</span></label>
-                      <input
-                        type="date"
-                        className={inputCls(errors.sewaStartDate)}
-                        value={sewaStartDate}
-                        onChange={e => setSewaStartDate(e.target.value)}
-                      />
+                      <ModalDatePicker value={sewaStartDate} onChange={setSewaStartDate} error={!!errors.sewaStartDate} />
                       {errors.sewaStartDate && <p className="text-red-400 text-xs mt-0.5">{errors.sewaStartDate}</p>}
                     </div>
                     <div>
                       <label className="text-slate-400 text-xs mb-1 block">Tanggal Berakhir <span className="text-red-400">*</span></label>
-                      <input
-                        type="date"
-                        className={inputCls(errors.sewaEndDate)}
-                        value={sewaEndDate}
-                        onChange={e => setSewaEndDate(e.target.value)}
-                      />
+                      <ModalDatePicker value={sewaEndDate} onChange={setSewaEndDate} error={!!errors.sewaEndDate} />
                       {errors.sewaEndDate && <p className="text-red-400 text-xs mt-0.5">{errors.sewaEndDate}</p>}
                     </div>
                   </div>
@@ -951,10 +1130,14 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
               {mode === 'add' && (
                 <div>
                   <label className="block text-slate-300 text-sm mb-1.5">Asal Proyek</label>
-                  <select className={inputCls()} value={origin} onChange={e => setOrigin(e.target.value as ProjectOrigin)}>
-                    <option value="direct">Langsung (Direct)</option>
-                    <option value="quotation">Dari Penawaran (Quotation)</option>
-                  </select>
+                  <ModalSelect
+                    value={origin}
+                    onChange={v => setOrigin(v as ProjectOrigin)}
+                    options={[
+                      { value: 'direct',    label: 'Langsung (Direct)' },
+                      { value: 'quotation', label: 'Dari Penawaran (Quotation)' },
+                    ]}
+                  />
                   <p className="text-slate-500 text-xs mt-1">Untuk proyek dari penawaran, gunakan fitur Konversi di halaman Penawaran.</p>
                 </div>
               )}
