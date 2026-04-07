@@ -21,6 +21,8 @@ import {
   calcProjectTotal,
   calcGrandTotal,
   calcMarketerFee,
+  calcHargaAsliItem,
+  calcPajakItemDetail,
   formatCurrency,
 } from '@/src/domain/entities/Project';
 import { Icon } from '../../atoms/Icon';
@@ -322,6 +324,11 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
   const [adminFeeAmount,  setAdminFeeAmount]  = useState<number>(existFees?.adminFeeAmount ?? 0);
   const [adminFeePlatform,setAdminFeePlatform]= useState<string>(existFees?.adminFeePlatform ?? '');
 
+  // ── Pajak Inklusif per item ──────────────────────────────────────────────
+  const [sudahTermasukPajak, setSudahTermasukPajak] = useState<boolean>(project?.sudahTermasukPajak ?? false);
+  const [ppnPersenItem,      setPpnPersenItem]      = useState<number>(project?.ppnPersenItem ?? 11);
+  const [pphPersenItem,      setPphPersenItem]      = useState<number>(project?.pphPersenItem ?? 0);
+
   // ── External Marketer ──
   const existMkt = project?.externalMarketer;
   const [marketerEnabled,  setMarketerEnabled]  = useState<boolean>(!!existMkt);
@@ -428,6 +435,7 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
         renewalMonths,
       } : {}),
       additionalFees: buildAdditionalFees(),
+      ...(sudahTermasukPajak ? { sudahTermasukPajak, ppnPersenItem, pphPersenItem } : {}),
       externalMarketer: buildMarketer(),
     };
     const dto = mode === 'add'
@@ -703,39 +711,65 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
               {errors.items && <p className="text-red-400 text-xs mb-2">{errors.items}</p>}
 
               <div className="space-y-2">
-                {items.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-12 gap-2 items-start bg-slate-700/30 rounded-lg p-3">
-                    {/* Name */}
-                    <div className="col-span-4">
-                      <input
-                        className={inputCls(errors[`item_name_${idx}`])}
-                        placeholder="Nama item"
-                        value={item.name}
-                        onChange={e => updateItem(idx, 'name', e.target.value)}
-                      />
-                      {errors[`item_name_${idx}`] && <p className="text-red-400 text-xs mt-0.5">{errors[`item_name_${idx}`]}</p>}
+                {items.map((item, idx) => {
+                  const pajakDetail = sudahTermasukPajak
+                    ? calcPajakItemDetail(item.unitPrice, item.quantity, ppnPersenItem, pphPersenItem)
+                    : null;
+                  return (
+                    <div key={idx} className="grid grid-cols-12 gap-2 items-start bg-slate-700/30 rounded-lg p-3">
+                      {/* Name */}
+                      <div className="col-span-4">
+                        <input
+                          className={inputCls(errors[`item_name_${idx}`])}
+                          placeholder="Nama item"
+                          value={item.name}
+                          onChange={e => updateItem(idx, 'name', e.target.value)}
+                        />
+                        {errors[`item_name_${idx}`] && <p className="text-red-400 text-xs mt-0.5">{errors[`item_name_${idx}`]}</p>}
+                      </div>
+                      {/* Qty */}
+                      <div className="col-span-2">
+                        <input type="number" min={1} className={inputCls()} placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value)} />
+                      </div>
+                      {/* Unit */}
+                      <div className="col-span-2">
+                        <input className={inputCls()} placeholder="Satuan" value={item.unit} onChange={e => updateItem(idx, 'unit', e.target.value)} />
+                      </div>
+                      {/* Price */}
+                      <div className="col-span-3">
+                        <input type="number" min={0} className={inputCls(errors[`item_price_${idx}`])} placeholder="Harga satuan" value={item.unitPrice || ''} onChange={e => updateItem(idx, 'unitPrice', e.target.value)} />
+                        {errors[`item_price_${idx}`] && <p className="text-red-400 text-xs mt-0.5">{errors[`item_price_${idx}`]}</p>}
+                        {/* DPP breakdown when inclusive tax is on */}
+                        {sudahTermasukPajak && item.unitPrice > 0 && pajakDetail && (
+                          <div className="mt-1.5 space-y-0.5 text-xs">
+                            <p className="text-slate-500">
+                              DPP/satuan:{' '}
+                              <span className="text-emerald-400 font-medium">
+                                {formatCurrency(calcHargaAsliItem(item.unitPrice, ppnPersenItem, pphPersenItem))}
+                              </span>
+                            </p>
+                            {ppnPersenItem > 0 && (
+                              <p className="text-amber-400/70">
+                                PPN {ppnPersenItem}%: +{formatCurrency(pajakDetail.ppnAmount)}
+                              </p>
+                            )}
+                            {pphPersenItem > 0 && (
+                              <p className="text-amber-400/70">
+                                PPH {pphPersenItem}%: +{formatCurrency(pajakDetail.pphAmount)}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {/* Remove */}
+                      <div className="col-span-1 flex justify-center pt-2.5">
+                        <button type="button" onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-300 disabled:opacity-30" disabled={items.length === 1}>
+                          <Icon name="trash" className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    {/* Qty */}
-                    <div className="col-span-2">
-                      <input type="number" min={1} className={inputCls()} placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value)} />
-                    </div>
-                    {/* Unit */}
-                    <div className="col-span-2">
-                      <input className={inputCls()} placeholder="Satuan" value={item.unit} onChange={e => updateItem(idx, 'unit', e.target.value)} />
-                    </div>
-                    {/* Price */}
-                    <div className="col-span-3">
-                      <input type="number" min={0} className={inputCls(errors[`item_price_${idx}`])} placeholder="Harga satuan" value={item.unitPrice || ''} onChange={e => updateItem(idx, 'unitPrice', e.target.value)} />
-                      {errors[`item_price_${idx}`] && <p className="text-red-400 text-xs mt-0.5">{errors[`item_price_${idx}`]}</p>}
-                    </div>
-                    {/* Remove */}
-                    <div className="col-span-1 flex justify-center pt-2.5">
-                      <button type="button" onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-300 disabled:opacity-30" disabled={items.length === 1}>
-                        <Icon name="trash" className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Total */}
@@ -757,66 +791,172 @@ export const ProjectModal: React.FC<Props> = ({ mode, project, saving, onClose, 
                 <span className="text-slate-500 text-xs">(opsional)</span>
               </div>
 
-              {/* PPN */}
-              <div className="space-y-2">
-                <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">PPN</p>
-                <div className="flex gap-2">
-                  {([0, 11, 12] as const).map(rate => (
-                    <button
-                      key={rate}
-                      type="button"
-                      onClick={() => setPpnRate(rate as PPNRate | 0)}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                        ppnRate === rate
-                          ? 'bg-amber-500/20 border-amber-500/60 text-amber-300'
-                          : 'bg-transparent border-slate-600/50 text-slate-400 hover:border-slate-500 hover:text-slate-300'
-                      }`}
-                    >
-                      {rate === 0 ? 'Tidak dikenakan' : `PPN ${rate}%`}
-                    </button>
-                  ))}
-                </div>
-                {ppnRate !== 0 && (
-                  <p className="text-amber-400/70 text-xs">
-                    PPN {ppnRate}% = {formatCurrency(ppnAmount)}
-                  </p>
-                )}
-              </div>
-
-              {/* PPH */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">PPH</p>
-                  <label className="flex items-center gap-2 cursor-pointer">
+              {/* ── Harga Termasuk Pajak (Inclusive Tax) ── */}
+              <div className="bg-slate-700/40 border border-slate-600/40 rounded-xl p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-emerald-500/20 rounded flex items-center justify-center shrink-0">
+                      <Icon name="check-circle" className="w-3 h-3 text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-slate-200 text-sm font-medium">Harga Sudah Termasuk Pajak?</p>
+                      <p className="text-slate-500 text-xs">Aktifkan jika harga satuan item sudah include PPN &amp; PPH</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={pphEnabled}
-                      onChange={e => setPphEnabled(e.target.checked)}
-                      className="w-3.5 h-3.5 accent-amber-500"
+                      className="sr-only peer"
+                      checked={sudahTermasukPajak}
+                      onChange={e => {
+                        const checked = e.target.checked;
+                        setSudahTermasukPajak(checked);
+                        // Saat inclusive tax diaktifkan, reset PPN & PPH terpisah
+                        if (checked) {
+                          setPpnRate(0);
+                          setPphEnabled(false);
+                        }
+                      }}
                     />
-                    <span className="text-slate-400 text-xs">Dikenakan PPH</span>
+                    <div className="w-9 h-5 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500" />
                   </label>
                 </div>
-                {pphEnabled && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-44">
-                      <label className="text-slate-500 text-xs mb-1 block">Tarif PPH (%)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        className={inputCls()}
-                        value={pphRate}
-                        onChange={e => setPphRate(Number(e.target.value))}
-                        placeholder="0.5"
-                      />
-                    </div>
-                    <p className="text-amber-400/70 text-xs mt-4">
-                      PPH {pphRate}% = {formatCurrency(pphAmount)}
+
+                {sudahTermasukPajak && (
+                  <div className="space-y-3 pt-1 border-t border-slate-600/40">
+                    <p className="text-slate-400 text-xs">
+                      Masukkan % pajak yang sudah termasuk dalam harga satuan. Sistem akan otomatis menghitung harga asli (DPP) per item.
                     </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-slate-400 text-xs mb-1.5">
+                          PPN per Item (%)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.1}
+                            className={inputCls()}
+                            value={ppnPersenItem}
+                            onChange={e => setPpnPersenItem(Number(e.target.value))}
+                            placeholder="11"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">%</span>
+                        </div>
+                        <p className="text-slate-500 text-xs mt-0.5">Contoh: 11 untuk PPN 11%</p>
+                      </div>
+                      <div>
+                        <label className="block text-slate-400 text-xs mb-1.5">
+                          PPH per Item (%)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.1}
+                            className={inputCls()}
+                            value={pphPersenItem}
+                            onChange={e => setPphPersenItem(Number(e.target.value))}
+                            placeholder="2"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">%</span>
+                        </div>
+                        <p className="text-slate-500 text-xs mt-0.5">Contoh: 2 untuk PPH 2%</p>
+                      </div>
+                    </div>
+                    {(ppnPersenItem > 0 || pphPersenItem > 0) && (
+                      <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg px-3 py-2 text-xs text-slate-400">
+                        <span className="text-emerald-400 font-medium">Cara baca: </span>
+                        Harga satuan di item = harga asli (DPP) + PPN {ppnPersenItem}% + PPH {pphPersenItem}%.
+                        Total pajak inklusif: <span className="text-amber-300 font-medium">{ppnPersenItem + pphPersenItem}%</span>.
+                        DPP dihitung otomatis dengan membagi harga satuan dengan{' '}
+                        <span className="text-white font-medium">(1 + {(ppnPersenItem + pphPersenItem) / 100})</span>.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+
+              {/* PPN */}
+              {!sudahTermasukPajak ? (
+                <div className="space-y-2">
+                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">PPN</p>                <div className="flex gap-2">
+                    {([0, 11, 12] as const).map(rate => (
+                      <button
+                        key={rate}
+                        type="button"
+                        onClick={() => setPpnRate(rate as PPNRate | 0)}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                          ppnRate === rate
+                            ? 'bg-amber-500/20 border-amber-500/60 text-amber-300'
+                            : 'bg-transparent border-slate-600/50 text-slate-400 hover:border-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        {rate === 0 ? 'Tidak dikenakan' : `PPN ${rate}%`}
+                      </button>
+                    ))}
+                  </div>
+                  {ppnRate !== 0 && (
+                    <p className="text-amber-400/70 text-xs">
+                      PPN {ppnRate}% = {formatCurrency(ppnAmount)}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 py-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  <p className="text-slate-500 text-xs">
+                    PPN sudah tercakup dalam harga item (inklusif {ppnPersenItem}%)
+                  </p>
+                </div>
+              )}
+
+              {/* PPH */}
+              {!sudahTermasukPajak ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">PPH</p>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pphEnabled}
+                        onChange={e => setPphEnabled(e.target.checked)}
+                        className="w-3.5 h-3.5 accent-amber-500"
+                      />
+                      <span className="text-slate-400 text-xs">Dikenakan PPH</span>
+                    </label>
+                  </div>
+                  {pphEnabled && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-44">
+                        <label className="text-slate-500 text-xs mb-1 block">Tarif PPH (%)</label>
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          className={inputCls()}
+                          value={pphRate}
+                          onChange={e => setPphRate(Number(e.target.value))}
+                          placeholder="0.5"
+                        />
+                      </div>
+                      <p className="text-amber-400/70 text-xs mt-4">
+                        PPH {pphRate}% = {formatCurrency(pphAmount)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 py-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  <p className="text-slate-500 text-xs">
+                    PPH sudah tercakup dalam harga item (inklusif {pphPersenItem}%)
+                  </p>
+                </div>
+              )}
 
               {/* Biaya Lainnya */}
               <div className="space-y-2">

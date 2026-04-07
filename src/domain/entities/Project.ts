@@ -146,6 +146,16 @@ export interface Project {
   additionalFees?: ProjectAdditionalFees;
 
   /**
+   * Apakah harga satuan item SUDAH termasuk pajak (inclusive tax)?
+   * Jika true → harga asli (DPP) dihitung otomatis per item.
+   */
+  sudahTermasukPajak?: boolean;
+  /** PPN % yang sudah termasuk dalam harga item. Contoh: 11 */
+  ppnPersenItem?: number;
+  /** PPH % yang sudah termasuk dalam harga item. Contoh: 2 */
+  pphPersenItem?: number;
+
+  /**
    * Grand total setelah memperhitungkan semua biaya tambahan.
    * Jika tidak ada additionalFees → sama dengan totalValue.
    */
@@ -236,6 +246,15 @@ export interface CreateProjectDTO {
   renewalMonths?:  number;
   /** Biaya tambahan opsional: PPN, PPH, e-materai, materai, e-sign. */
   additionalFees?: ProjectAdditionalFees;
+  /**
+   * Apakah harga satuan item SUDAH termasuk pajak (inclusive tax)?
+   * Jika true → sistem hitung DPP per item otomatis.
+   */
+  sudahTermasukPajak?: boolean;
+  /** PPN % yang sudah termasuk dalam harga item. Contoh: 11 */
+  ppnPersenItem?: number;
+  /** PPH % yang sudah termasuk dalam harga item. Contoh: 2 */
+  pphPersenItem?: number;
   /** Marketing eksternal yang mendatangkan proyek ini. */
   externalMarketer?: ExternalMarketer;
 }
@@ -263,6 +282,10 @@ export interface UpdateProjectDTO {
   renewalMonths?: number;
   /** Biaya tambahan opsional: PPN, PPH, e-materai, materai, e-sign. */
   additionalFees?: ProjectAdditionalFees;
+  /** Pajak inklusif per item */
+  sudahTermasukPajak?: boolean;
+  ppnPersenItem?: number;
+  pphPersenItem?: number;
   /** Marketing eksternal yang mendatangkan proyek ini. */
   externalMarketer?: ExternalMarketer;
 }
@@ -362,4 +385,38 @@ export const calcMarketerFee = (totalValue: number, marketer?: ExternalMarketer)
   if (!marketer) return 0;
   if (marketer.feeType === 'percent') return (totalValue * (marketer.feePercent ?? 0)) / 100;
   return marketer.feeAmount ?? 0;
+};
+
+/**
+ * Hitung harga asli (DPP) dari harga yang SUDAH termasuk pajak (inclusive).
+ * Formula: hargaAsli = hargaInklusif / (1 + (ppnPersen + pphPersen) / 100)
+ *
+ * Contoh: harga 2.220.000 sudah termasuk PPN 11% + PPH 2%
+ *   → DPP = 2.220.000 / 1.13 = ~1.964.602
+ */
+export const calcHargaAsliItem = (
+  hargaInklusif: number,
+  ppnPersen: number = 0,
+  pphPersen: number = 0,
+): number => {
+  const totalPajakPersen = ppnPersen + pphPersen;
+  if (totalPajakPersen <= 0) return hargaInklusif;
+  return hargaInklusif / (1 + totalPajakPersen / 100);
+};
+
+/**
+ * Hitung komponen pajak per item dari harga inklusif.
+ * Mengembalikan { dpp, ppnAmount, pphAmount }
+ */
+export const calcPajakItemDetail = (
+  hargaInklusif: number,
+  qty: number,
+  ppnPersen: number = 0,
+  pphPersen: number = 0,
+): { dpp: number; ppnAmount: number; pphAmount: number } => {
+  const dppSatuan = calcHargaAsliItem(hargaInklusif, ppnPersen, pphPersen);
+  const dpp = dppSatuan * qty;
+  const ppnAmount = (dpp * ppnPersen) / 100;
+  const pphAmount = (dpp * pphPersen) / 100;
+  return { dpp, ppnAmount, pphAmount };
 };
