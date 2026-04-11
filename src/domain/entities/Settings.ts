@@ -61,14 +61,14 @@ export interface FullSettings {
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
 export const DEFAULT_STORE: AppSettings = {
-  storeName:    'Nexus Admin',
+  storeName:    'IKIBISNIS',
   storeTagline: 'MANAGEMENT SYSTEM',
   storeAddress: 'Jl. Contoh No. 1, Jakarta',
   storePhone:   '+62 812-3456-7890',
-  storeEmail:   'admin@nexus.id',
-  storeWebsite: 'https://nexus.id',
+  storeEmail:   'admin@ikibisnis.id',
+  storeWebsite: 'https://ikibisnis.id',
   currency:     'IDR',
-  logoInitial:  'N',
+  logoInitial:  'I',
   logoColor:    'blue',
   timezone:     'Asia/Jakarta',
 };
