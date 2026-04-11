@@ -93,6 +93,9 @@ interface ApiProjectDetail extends ApiProject {
   ppnNominal?:          number | null;
   pphPersen?:           number | null;
   pphNominal?:          number | null;
+  sudahTermasukPajak?:  boolean | null;
+  ppnPersenItem?:       number | null;
+  pphPersenItem?:       number | null;
   biayaLainnya?:        ApiBiayaLainnya[] | null;
   marketingExternal?:   ApiMarketingExternal | null;
   items?:               ApiProjectItem[];
@@ -287,6 +290,11 @@ function mapApiProjectDetail(p: ApiProjectDetail): Project {
     grandTotal,
     ...(fees     ? { additionalFees:    fees }     : {}),
     ...(marketer ? { externalMarketer:  marketer } : {}),
+    ...(p.sudahTermasukPajak ? {
+      sudahTermasukPajak: true,
+      ppnPersenItem: p.ppnPersenItem ?? 0,
+      pphPersenItem: p.pphPersenItem ?? 0,
+    } : {}),
     assignedTo:  p.assignedToUserId ?? '',
     createdAt:   new Date(p.createdAt),
     deadline:    new Date(p.deadline),
@@ -481,6 +489,11 @@ export class ApiProjectRepository implements IProjectRepository {
                                    pphNominal: Math.round((calcProjectTotal(dto.items) * (fees.pphRate ?? 0.5)) / 100) } : {}),
       ...(biayaLainnya.length  ? { biayaLainnya }                    : {}),
       ...(marketingExternal    ? { marketingExternal }               : {}),
+      ...(dto.sudahTermasukPajak ? {
+        sudahTermasukPajak: true,
+        ppnPersenItem:      dto.ppnPersenItem ?? 0,
+        pphPersenItem:      dto.pphPersenItem ?? 0,
+      } : {}),
     };
 
     const created = await projectApiFetch<ApiProjectDetail>(BASE, {

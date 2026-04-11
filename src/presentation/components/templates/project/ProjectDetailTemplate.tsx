@@ -6,7 +6,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Project, ProjectStatus, Termin, PaymentMethod, formatCurrency, calcOperationalCosts, calcMarketerFee } from '@/src/domain/entities/Project';
+import { Project, ProjectStatus, Termin, PaymentMethod, formatCurrency, calcOperationalCosts, calcMarketerFee, calcHargaAsliItem, calcPajakItemDetail } from '@/src/domain/entities/Project';
 import { Sidebar } from '../../organisms/shared/Sidebar';
 import { TopBar } from '../../organisms/shared/TopBar';
 import { Icon } from '../../atoms/Icon';
@@ -140,6 +140,16 @@ export const ProjectDetailTemplate: React.FC<ProjectDetailTemplateProps> = ({
 
               {/* Items */}
               <Card title="Item Pengadaan" icon="package">
+                {project.sudahTermasukPajak && (
+                  <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-teal-500/10 border border-teal-500/20 rounded-xl text-xs text-teal-300">
+                    <Icon name="check-circle" className="w-4 h-4 shrink-0 text-teal-400" />
+                    <span>
+                      Harga satuan <strong>sudah termasuk pajak</strong> — PPN {project.ppnPersenItem ?? 0}%
+                      {(project.pphPersenItem ?? 0) > 0 && ` + PPH ${project.pphPersenItem}%`}.
+                      DPP per item ditampilkan di bawah harga satuan.
+                    </span>
+                  </div>
+                )}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -151,16 +161,28 @@ export const ProjectDetailTemplate: React.FC<ProjectDetailTemplateProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-700/30">
-                      {project.items.map((item, i) => (
-                        <tr key={i} className="hover:bg-slate-700/10 transition-colors">
-                          <td className="py-3 pr-4 text-white">{item.name}</td>
-                          <td className="py-3 px-4 text-right text-slate-400">{item.quantity} {item.unit}</td>
-                          <td className="py-3 px-4 text-right text-slate-400">{formatCurrency(item.unitPrice)}</td>
-                          <td className="py-3 pl-4 text-right text-emerald-400 font-medium">
-                            {formatCurrency(item.quantity * item.unitPrice)}
-                          </td>
-                        </tr>
-                      ))}
+                      {project.items.map((item, i) => {
+                        const pajakDetail = project.sudahTermasukPajak && item.unitPrice > 0
+                          ? calcPajakItemDetail(item.unitPrice, item.quantity, project.ppnPersenItem ?? 0, project.pphPersenItem ?? 0)
+                          : null;
+                        return (
+                          <tr key={i} className="hover:bg-slate-700/10 transition-colors">
+                            <td className="py-3 pr-4 text-white">{item.name}</td>
+                            <td className="py-3 px-4 text-right text-slate-400">{item.quantity} {item.unit}</td>
+                            <td className="py-3 px-4 text-right text-slate-400">
+                              {formatCurrency(item.unitPrice)}
+                              {pajakDetail && (
+                                <div className="text-teal-400/70 text-xs mt-0.5">
+                                  DPP: {formatCurrency(calcHargaAsliItem(item.unitPrice, project.ppnPersenItem ?? 0, project.pphPersenItem ?? 0))}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 pl-4 text-right text-emerald-400 font-medium">
+                              {formatCurrency(item.quantity * item.unitPrice)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                     <tfoot>
                       <tr className="border-t border-slate-700/50">
@@ -171,6 +193,36 @@ export const ProjectDetailTemplate: React.FC<ProjectDetailTemplateProps> = ({
                           {formatCurrency(project.totalValue)}
                         </td>
                       </tr>
+                      {project.sudahTermasukPajak && (() => {
+                        const totalPajak = project.items.reduce((sum, item) => {
+                          const d = calcPajakItemDetail(item.unitPrice, item.quantity, project.ppnPersenItem ?? 0, project.pphPersenItem ?? 0);
+                          return sum + d.ppnAmount + d.pphAmount;
+                        }, 0);
+                        const totalDpp = project.items.reduce((sum, item) => {
+                          const d = calcPajakItemDetail(item.unitPrice, item.quantity, project.ppnPersenItem ?? 0, project.pphPersenItem ?? 0);
+                          return sum + d.dpp;
+                        }, 0);
+                        return (
+                          <>
+                            <tr>
+                              <td colSpan={3} className="pt-1.5 text-teal-400/80 text-xs">DPP (Harga Asli)</td>
+                              <td className="pt-1.5 text-right text-teal-400/80 text-xs">{formatCurrency(totalDpp)}</td>
+                            </tr>
+                            {(project.ppnPersenItem ?? 0) > 0 && (
+                              <tr>
+                                <td colSpan={3} className="pt-1 text-teal-400/80 text-xs">PPN {project.ppnPersenItem}% (inklusif)</td>
+                                <td className="pt-1 text-right text-teal-400/80 text-xs">{formatCurrency(project.items.reduce((s, it) => s + calcPajakItemDetail(it.unitPrice, it.quantity, project.ppnPersenItem ?? 0, 0).ppnAmount, 0))}</td>
+                              </tr>
+                            )}
+                            {(project.pphPersenItem ?? 0) > 0 && (
+                              <tr>
+                                <td colSpan={3} className="pt-1 text-teal-400/80 text-xs">PPH {project.pphPersenItem}% (inklusif)</td>
+                                <td className="pt-1 text-right text-teal-400/80 text-xs">{formatCurrency(project.items.reduce((s, it) => s + calcPajakItemDetail(it.unitPrice, it.quantity, 0, project.pphPersenItem ?? 0).pphAmount, 0))}</td>
+                              </tr>
+                            )}
+                          </>
+                        );
+                      })()}
                       {project.additionalFees && (() => {
                         const f = project.additionalFees!;
                         const ppnAmt = f.ppnRate    ? (project.totalValue * f.ppnRate) / 100          : 0;
