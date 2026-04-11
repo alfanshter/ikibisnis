@@ -76,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activePage }) => {
   };
 
   // Dynamic store identity from settings
-  const [storeName,    setStoreName]    = useState('Nexus Admin');
+  const [storeName,    setStoreName]    = useState('IKIBISNIS');
   const [storeTagline, setStoreTagline] = useState('MANAGEMENT SYSTEM');
   const [logoInitial,  setLogoInitial]  = useState('N');
   const [logoColor,    setLogoColor]    = useState('blue');
